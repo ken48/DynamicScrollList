@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class ChatItemWidget1 : MonoBehaviour, IDynamicScrollItemWidget
 {
+    public RectTransform rectTransform => (RectTransform)transform;
+
     [SerializeField]
     TextMeshProUGUI _title;
     [SerializeField]

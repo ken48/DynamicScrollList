@@ -13,6 +13,7 @@ public interface IDynamicScrollItemProvider
 
 public interface IDynamicScrollItemWidget
 {
+    RectTransform rectTransform { get; }
     void Fill(IDynamicScrollItem item);
 }
 
@@ -25,60 +26,110 @@ public interface IDynamicScrollItemWidgetProvider
 [RequireComponent(typeof(ScrollRect))]
 public class DynamicScrollWidget : MonoBehaviour
 {
-    struct WidgetInfo
+    class ActiveItem
     {
-        public float position;
-        public float size;
+        public int index;
+        public IDynamicScrollItemWidget widget;
     }
+
+    [SerializeField]
+    float _spacing;
 
     ScrollRect _scrollRect;
     IDynamicScrollItemProvider _itemProvider;
-    IDynamicScrollItemWidgetProvider _itemWidgetProvider;
-    List<WidgetInfo> _itemWidgetInfos;
+    DynamicScrollItemWidgetsPool _itemWidgetsPool;
+    List<ActiveItem> _activeItems;
+    int _itemMaxIndex;
 
     public void Init(IDynamicScrollItemProvider itemProvider, IDynamicScrollItemWidgetProvider itemWidgetProvider)
     {
         _scrollRect = GetComponent<ScrollRect>();
         _scrollRect.onValueChanged.AddListener(OnScroll);
 
-        _itemWidgetInfos = new List<WidgetInfo>();
-
         _itemProvider = itemProvider;
-        _itemWidgetProvider = itemWidgetProvider;
-
-        // // Todo: temp
-        // FillItems();
+        _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, _scrollRect.content);
+        _activeItems = new List<ActiveItem>();
+        _itemMaxIndex = -1;
     }
-
-    // void FillItems()
-    // {
-    //     int index = 0;
-    //     IDynamicScrollItem item = null;
-    //     while((item = _itemProvider.GetItemByIndex(index++)) != null)
-    //     {
-    //         var widget = _itemWidgetProvider.GetNewItemWidget(item);
-    //         ((MonoBehaviour)widget).transform.SetParent(_scrollRect.content, false);
-    //         widget.Fill(item);
-    //     }
-    // }
 
     void OnScroll(Vector2 normalizedPosition)
     {
-        // Todo: converter from normalizedPosition to item index
-        // Use history, if no history then 0;
+        Rect viewportWorldRect = RectHelpers.GetWorldRect(_scrollRect.viewport);
 
-        int index = GetCurrentItemIndex();
+        // Remove
+        // Todo: optimization - iterate from both ends
+        _activeItems.RemoveAll(activeItem =>
+        {
+            Rect widgetWorldRect = RectHelpers.GetWorldRect(activeItem.widget.rectTransform);
+            bool result = !widgetWorldRect.Overlaps(viewportWorldRect);
+            if (result)
+                _itemWidgetsPool.ReturnWidget(activeItem.widget);
+            return result;
+        });
 
-        Debug.Log(normalizedPosition.y);
+        // Add
+        // Head
+        while (true)
+        {
+            if (_activeItems.Count == 0)
+                break;
 
+            ActiveItem headActiveItem = _activeItems[0];
+            int prevItemIndex = headActiveItem.index - 1;
+            IDynamicScrollItem prevItem = _itemProvider.GetItemByIndex(prevItemIndex);
+            if (prevItem == null)
+                break;
+
+            // Check free space from head
+            RectTransform headActiveItemRectTransform = headActiveItem.widget.rectTransform;
+            Vector2 rt = headActiveItemRectTransform.TransformPoint(headActiveItemRectTransform.rect.max + Vector2.one * _spacing);
+            if (viewportWorldRect.yMax >= rt.y)
+                AddActiveItem(prevItem, prevItemIndex, true);
+        }
+
+        // Tail
+        while (true)
+        {
+            int nextItemIndex = -1;
+            if (_activeItems.Count == 0)
+            {
+                nextItemIndex = 0;
+            }
+            else
+            {
+                // Check free space from tail
+                ActiveItem tailActiveItem = _activeItems[_activeItems.Count - 1];
+                RectTransform tailActiveItemRectTransform = tailActiveItem.widget.rectTransform;
+                Vector2 lb = tailActiveItemRectTransform.TransformPoint(tailActiveItemRectTransform.rect.min - Vector2.one * _spacing);
+                if (viewportWorldRect.yMin <= lb.y)
+                    nextItemIndex = tailActiveItem.index + 1;
+            }
+
+            IDynamicScrollItem nextItem = _itemProvider.GetItemByIndex(nextItemIndex);
+            if (nextItem != null)
+            {
+                AddActiveItem(nextItem, nextItemIndex, false);
+
+                // Todo:
+                // if (!fromHead && _itemMaxIndex < itemIndex)
+                //     resize _scrollRect.content; _itemMaxIndex = itemIndex;
+            }
+        }
     }
 
-    int GetCurrentItemIndex(Vector2 normalizedPosition)
+    void AddActiveItem(IDynamicScrollItem item, int itemIndex, bool fromHead)
     {
-        // Find nearest widget normalized
 
-        return _itemWidgetSizes.
     }
+}
 
-
+static class RectHelpers
+{
+    public static Rect GetWorldRect(RectTransform rectTransform)
+    {
+        Rect rect = rectTransform.rect;
+        Vector2 worldRectMin = rectTransform.TransformPoint(rect.min);
+        Vector2 worldRectMax = rectTransform.TransformPoint(rect.max);
+        return Rect.MinMaxRect(worldRectMin.x, worldRectMin.y, worldRectMax.x, worldRectMax.y);
+    }
 }

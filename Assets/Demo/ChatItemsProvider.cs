@@ -21,6 +21,8 @@ public class ChatItem2 : ChatItem
 
 public class ChatItemsProvider : IDynamicScrollItemProvider
 {
+    public int itemsCount => _items.Length;
+
     readonly ChatItem[] _items;
 
     public ChatItemsProvider(ChatItem[] items)
@@ -32,7 +34,7 @@ public class ChatItemsProvider : IDynamicScrollItemProvider
     {
         // If null then no data for index.
         // Well, we can stop scrolling.
-        return index < _items?.Length ? _items[index] : null;
+        return index >= 0 && index < _items?.Length ? _items[index] : null;
     }
 }
 
