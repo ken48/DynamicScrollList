@@ -40,12 +40,12 @@ public class ChatItemsProvider : IDynamicScrollItemProvider
 
 public class ChatItemWidgetsProvider : IDynamicScrollItemWidgetProvider
 {
-    public IDynamicScrollItemWidget GetNewItemWidget(IDynamicScrollItem item)
+    public IDynamicScrollItemWidget GetNewItemWidget(IDynamicScrollItem item, Transform rootNode)
     {
         if (item is ChatItem1)
-            return GameObject.Instantiate(Resources.Load<ChatItemWidget1>("Prefabs/ChatItemWidget1"));
+            return GameObject.Instantiate(Resources.Load<ChatItemWidget1>("Prefabs/ChatItemWidget1"), rootNode);
         if (item is ChatItem2)
-            return GameObject.Instantiate(Resources.Load<ChatItemWidget2>("Prefabs/ChatItemWidget2"));
+            return GameObject.Instantiate(Resources.Load<ChatItemWidget2>("Prefabs/ChatItemWidget2"), rootNode);
 
         throw new Exception("Unknown item widget type");
     }
