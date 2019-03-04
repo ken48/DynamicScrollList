@@ -21,8 +21,6 @@ public class ChatItem2 : ChatItem
 
 public class ChatItemsProvider : IDynamicScrollItemProvider
 {
-    public int itemsCount => _items.Length;
-
     readonly ChatItem[] _items;
 
     public ChatItemsProvider(ChatItem[] items)
@@ -52,7 +50,6 @@ public class ChatItemWidgetsProvider : IDynamicScrollItemWidgetProvider
 
     public void ReturnItemWidget(IDynamicScrollItemWidget itemWidget)
     {
-        // Todo: convert to Monobehaviour
-        GameObject.Destroy(((MonoBehaviour)itemWidget).gameObject);
+        GameObject.Destroy(itemWidget.go);
     }
 }

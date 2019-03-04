@@ -13,6 +13,7 @@ public interface IDynamicScrollItemProvider
 
 public interface IDynamicScrollItemWidget
 {
+    GameObject go { get; }
     RectTransform rectTransform { get; }
     void Fill(IDynamicScrollItem item);
 }
@@ -52,6 +53,13 @@ public class DynamicScrollWidget : MonoBehaviour
         _itemMaxIndex = -1;
     }
 
+    public void Shutdown()
+    {
+        foreach (ActiveItem activeItem in _activeItems)
+            _itemWidgetsPool.ReturnWidget(activeItem.widget);
+        _itemWidgetsPool.Dispose();
+    }
+
     void OnScroll(Vector2 normalizedPosition)
     {
         Rect viewportWorldRect = RectHelpers.GetWorldRect(_scrollRect.viewport);
@@ -69,7 +77,7 @@ public class DynamicScrollWidget : MonoBehaviour
 
         // Todo: what if there will be no active items after removing?
         // It can be on fast scrolling at low fps when the scroll step per one frame will more than viewport size
-        // ...
+        // Cache last removed or (first/last active) for head or tail pivots
 
         // Add
         // Head
@@ -84,6 +92,9 @@ public class DynamicScrollWidget : MonoBehaviour
             ActiveItem headActiveItem = _activeItems[0];
             RectTransform headActiveItemRectTransform = headActiveItem.widget.rectTransform;
             Vector2 rt = headActiveItemRectTransform.TransformPoint(headActiveItemRectTransform.rect.max + Vector2.one * _spacing);
+
+            // Todo: generalization for horizontal, vertical, from top, from bottom...
+
             if (viewportWorldRect.yMax >= rt.y)
                 prevItemIndex = headActiveItem.index - 1;
 

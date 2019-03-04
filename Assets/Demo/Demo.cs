@@ -8,7 +8,7 @@ public class Demo : MonoBehaviour
 
     void Awake()
     {
-        var chatItems = new ChatItem[50];
+        var chatItems = new ChatItem[100];
         for (int i = 0; i < chatItems.Length; i++)
             chatItems[i] = UnityEngine.Random.value < 0.5f ? Helpers.GenerateChatItem1() : Helpers.GenerateChatItem2();
 
