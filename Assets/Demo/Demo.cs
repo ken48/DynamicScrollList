@@ -8,6 +8,9 @@ public class Demo : MonoBehaviour
 
     void Awake()
     {
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = 60;
+    
         var chatItems = new ChatItem[100];
         for (int i = 0; i < chatItems.Length; i++)
             chatItems[i] = UnityEngine.Random.value < 0.5f ? Helpers.GenerateChatItem1() : Helpers.GenerateChatItem2();
