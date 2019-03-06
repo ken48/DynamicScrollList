@@ -44,6 +44,8 @@ public class DynamicScrollWidget : MonoBehaviour
     List<IDynamicScrollItemWidget> _widgets;
     IDynamicScrollItemProviderIterator _headIterator;
     IDynamicScrollItemProviderIterator _tailIterator;
+    float _lastHeadPosition;
+    float _lastTailPosition;
 
     public void Init(IDynamicScrollItemProvider itemProvider, IDynamicScrollItemWidgetProvider itemWidgetProvider)
     {
@@ -83,9 +85,10 @@ public class DynamicScrollWidget : MonoBehaviour
 
         if (_widgets.Count > 0)
         {
-            float tailPos = GetTailPosition();
-            if (_scrollRect.content.rect.height < Mathf.Abs(tailPos))
-                _scrollRect.content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Abs(tailPos));
+            _lastHeadPosition = GetHeadPosition();
+            _lastTailPosition = GetTailPosition();
+            if (_scrollRect.content.rect.height < Mathf.Abs(_lastTailPosition))
+                _scrollRect.content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Abs(_lastTailPosition));
         }
     }
 
@@ -102,6 +105,9 @@ public class DynamicScrollWidget : MonoBehaviour
             _itemWidgetsPool.ReturnWidget(widget);
             _widgets.RemoveAt(index);
             
+            // Todo: the bug is here!!!
+            // |   |   |   |
+            // V   V   V   V 
             if (head)
                 _headIterator.MoveNext();
             else
@@ -177,7 +183,7 @@ public class DynamicScrollWidget : MonoBehaviour
     float GetHeadPosition()
     {
         if (_widgets.Count == 0)
-            return 0f;
+            return _lastHeadPosition;
 
         return _widgets[0].rectTransform.anchoredPosition.y;
     }
@@ -185,7 +191,7 @@ public class DynamicScrollWidget : MonoBehaviour
     float GetTailPosition()
     {
         if (_widgets.Count == 0)
-            return 0f;
+            return _lastTailPosition;
 
         var widgetRt = _widgets[_widgets.Count - 1].rectTransform;
         return widgetRt.anchoredPosition.y - widgetRt.rect.height;
