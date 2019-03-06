@@ -22,15 +22,15 @@ public class ChatItem2 : ChatItem
 // Todo: maybe move to common code
 class DynamicScrollItemIterator : IDynamicScrollItemProviderIterator
 {
-    public IDynamicScrollItem current => _current >= 0 && _current < _items?.Length ? _items[_current] : null;
+    public IDynamicScrollItem current => _current >= 0 && _current < _itemsProvider.items?.Length ? _itemsProvider.items[_current] : null;
     public bool isStart => _current == -1; 
 
-    IDynamicScrollItem[] _items;
+    ChatItemsProvider _itemsProvider;
     int _current;
 
-    public DynamicScrollItemIterator(IDynamicScrollItem[] items)
+    public DynamicScrollItemIterator(ChatItemsProvider itemsProvider)
     {
-        _items = items;
+        _itemsProvider = itemsProvider;
         SetCurrent(-1);
     }
 
@@ -46,13 +46,15 @@ class DynamicScrollItemIterator : IDynamicScrollItemProviderIterator
 
     void SetCurrent(int value)
     {
-        _current = Mathf.Clamp(value, -1, _items.Length);
+        _current = Mathf.Clamp(value, -1, _itemsProvider.items.Length);
     }
 }
 
 public class ChatItemsProvider : IDynamicScrollItemProvider
-{    
-    readonly ChatItem[] _items;
+{
+    public ChatItem[] items => _items;
+    
+    ChatItem[] _items;
 
     public ChatItemsProvider(ChatItem[] items)
     {
@@ -61,7 +63,13 @@ public class ChatItemsProvider : IDynamicScrollItemProvider
 
     public IDynamicScrollItemProviderIterator GetIterator()
     {
-        return new DynamicScrollItemIterator(_items);
+        return new DynamicScrollItemIterator(this);
+    }
+
+    // Can change data on fly
+    public void SetData(ChatItem[] items)
+    {
+        _items = items;
     }
 }
 
