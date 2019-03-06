@@ -6,9 +6,18 @@ public interface IDynamicScrollItem
 {
 }
 
-public interface IDynamicScrollItemProvider
+public interface IDynamicScrollItemProviderIterator
 {
-    IDynamicScrollItem GetItemByIndex(int index);
+    IDynamicScrollItem current { get; }
+    bool isStart { get; }
+
+    void MovePrevious();
+    void MoveNext();
+}
+
+public interface IDynamicScrollItemProvider
+{    
+    IDynamicScrollItemProviderIterator GetIterator();
 }
 
 public interface IDynamicScrollItemWidget
@@ -27,165 +36,158 @@ public interface IDynamicScrollItemWidgetProvider
 [RequireComponent(typeof(ScrollRect))]
 public class DynamicScrollWidget : MonoBehaviour
 {
-    class ActiveItem
-    {
-        public int index;
-        public IDynamicScrollItemWidget widget;
-    }
-
     [SerializeField]
     float _spacing;
 
     ScrollRect _scrollRect;
-    IDynamicScrollItemProvider _itemProvider;
     DynamicScrollItemWidgetsPool _itemWidgetsPool;
-    List<ActiveItem> _activeItems;
-    int _itemMaxIndex;
+    List<IDynamicScrollItemWidget> _widgets;
+    IDynamicScrollItemProviderIterator _headIterator;
+    IDynamicScrollItemProviderIterator _tailIterator;
 
     public void Init(IDynamicScrollItemProvider itemProvider, IDynamicScrollItemWidgetProvider itemWidgetProvider)
     {
         _scrollRect = GetComponent<ScrollRect>();
         _scrollRect.onValueChanged.AddListener(OnScroll);
 
-        _itemProvider = itemProvider;
         _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, _scrollRect.content);
-        _activeItems = new List<ActiveItem>();
-        _itemMaxIndex = -1;
+        _widgets = new List<IDynamicScrollItemWidget>();
+        _headIterator = itemProvider.GetIterator();
+        _tailIterator = itemProvider.GetIterator();
     }
 
     public void Shutdown()
     {
-        foreach (ActiveItem activeItem in _activeItems)
-            _itemWidgetsPool.ReturnWidget(activeItem.widget);
+        foreach (IDynamicScrollItemWidget widget in _widgets)
+            _itemWidgetsPool.ReturnWidget(widget);
         _itemWidgetsPool.Dispose();
     }
 
     void OnScroll(Vector2 normalizedPosition)
     {
-        Rect viewportWorldRect = RectHelpers.GetWorldRect(_scrollRect.viewport);
-
-        // Remove
-        // Todo: optimization - iterate from both ends
-        _activeItems.RemoveAll(activeItem =>
-        {
-            Rect widgetWorldRect = RectHelpers.GetWorldRect(activeItem.widget.rectTransform);
-            bool result = !widgetWorldRect.Overlaps(viewportWorldRect);
-            if (result)
-                _itemWidgetsPool.ReturnWidget(activeItem.widget);
-            return result;
-        });
-
+        // Todo: generalization for horizontal, vertical, from top, from bottom...
+        // Todo: what if we remove some elements from data during scrolling?           
         // Todo: what if there will be no active items after removing?
         // It can be on fast scrolling at low fps when the scroll step per one frame will more than viewport size
         // Cache last removed or (first/last active) for head or tail pivots
+        
+        // Todo: known bug: on fast scrolling some items are skipped
+        // Todo: known bug: sometimes (may be linked bug) content size is bigger than sum of items 
+        // Todo: known bug: sometimes there are no widget items at all. _headIterator == lastItem, tailIterator == lastItem + 1 
+        
+        Rect viewportWorldRect = RectHelpers.GetWorldRect(_scrollRect.viewport);
+        RemoveWidget(viewportWorldRect, true);
+        RemoveWidget(viewportWorldRect, false);
+        AddHead(viewportWorldRect);
+        AddTail(viewportWorldRect);
 
-        // Add
-        // Head
-        while (true)
+        if (_widgets.Count > 0)
         {
-            if (_activeItems.Count == 0)
-                break;
-
-            int prevItemIndex = -1;
-
-            // Check free space from head
-            ActiveItem headActiveItem = _activeItems[0];
-            RectTransform headActiveItemRectTransform = headActiveItem.widget.rectTransform;
-            Vector2 rt = headActiveItemRectTransform.TransformPoint(headActiveItemRectTransform.rect.max + Vector2.one * _spacing);
-
-            // Todo: generalization for horizontal, vertical, from top, from bottom...
-
-            if (viewportWorldRect.yMax >= rt.y)
-                prevItemIndex = headActiveItem.index - 1;
-
-            IDynamicScrollItem prevItem = _itemProvider.GetItemByIndex(prevItemIndex);
-            if (prevItem == null)
-                break;
-
-            AddActiveItem(prevItem, prevItemIndex, true);
-        }
-
-        // Tail
-        while (true)
-        {
-            int nextItemIndex = -1;
-            if (_activeItems.Count == 0)
-            {
-                nextItemIndex = 0;
-            }
-            else
-            {
-                // Check free space from tail
-                ActiveItem tailActiveItem = _activeItems[_activeItems.Count - 1];
-                RectTransform tailActiveItemRectTransform = tailActiveItem.widget.rectTransform;
-                Vector2 lb = tailActiveItemRectTransform.TransformPoint(tailActiveItemRectTransform.rect.min - Vector2.one * _spacing);
-                if (viewportWorldRect.yMin <= lb.y)
-                    nextItemIndex = tailActiveItem.index + 1;
-            }
-
-            IDynamicScrollItem nextItem = _itemProvider.GetItemByIndex(nextItemIndex);
-            if (nextItem == null)
-                break;
-
-            AddActiveItem(nextItem, nextItemIndex, false);
-
-            if (_itemMaxIndex < nextItemIndex)
-            {
-                _itemMaxIndex = nextItemIndex;
-                float tailPos = GetTailPosition();
-                if (_scrollRect.content.rect.height < Mathf.Abs(tailPos))
-                    _scrollRect.content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Abs(tailPos));
-            }
+            float tailPos = GetTailPosition();
+            if (_scrollRect.content.rect.height < Mathf.Abs(tailPos))
+                _scrollRect.content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Abs(tailPos));
         }
     }
 
-    void AddActiveItem(IDynamicScrollItem item, int itemIndex, bool fromHead)
+    void RemoveWidget(Rect viewportWorldRect, bool head)
+    {
+        while (_widgets.Count > 0)
+        {
+            int index = head ? 0 : _widgets.Count - 1;
+            IDynamicScrollItemWidget widget = _widgets[index];
+            Rect widgetWorldRect = RectHelpers.GetWorldRect(widget.rectTransform);
+            if (widgetWorldRect.Overlaps(viewportWorldRect))
+                break;
+
+            _itemWidgetsPool.ReturnWidget(widget);
+            _widgets.RemoveAt(index);
+            
+            if (head)
+                _headIterator.MoveNext();
+            else
+                _tailIterator.MovePrevious();
+        }
+    }
+
+    void AddHead(Rect viewportWorldRect)
+    {        
+        if (_widgets.Count == 0)
+            return;
+        
+        if (_headIterator.isStart)
+            _headIterator.MoveNext();
+        
+        while (true)
+        {
+            // Check free space from head
+            IDynamicScrollItemWidget headWidget = _widgets[0];
+            Vector2 rt = headWidget.rectTransform.TransformPoint(headWidget.rectTransform.rect.max + Vector2.one * _spacing);
+            if (viewportWorldRect.yMax < rt.y)
+                break;
+
+            _headIterator.MovePrevious();
+            IDynamicScrollItem prevItem = _headIterator.current;
+            if (prevItem == null)
+                break;
+
+            float headPosition = GetHeadPosition();
+            IDynamicScrollItemWidget widget = AddWidget(prevItem, 0);
+            Vector2 size = widget.rectTransform.rect.size;
+            Vector2 deltaPos = Vector2.up * (size.y + _spacing);
+            widget.rectTransform.anchoredPosition = new Vector2(0f, headPosition + deltaPos.y);
+        }
+    }
+
+    void AddTail(Rect viewportWorldRect)
+    {
+        while (true)
+        {
+            if (_widgets.Count > 0)
+            {
+                // Check free space from tail
+                IDynamicScrollItemWidget tailWidget = _widgets[_widgets.Count - 1];
+                Vector2 lb = tailWidget.rectTransform.TransformPoint(tailWidget.rectTransform.rect.min - Vector2.one * _spacing);
+                if (viewportWorldRect.yMin > lb.y)
+                    break;
+            }
+
+            _tailIterator.MoveNext();
+            IDynamicScrollItem nextItem = _tailIterator.current;
+            if (nextItem == null)
+                break;
+
+            float tailPosition = GetTailPosition();
+            IDynamicScrollItemWidget widget = AddWidget(nextItem, _widgets.Count);            
+            widget.rectTransform.anchoredPosition = new Vector2(0f, tailPosition - _spacing);
+        }
+    }
+
+    IDynamicScrollItemWidget AddWidget(IDynamicScrollItem item, int index)
     {
         IDynamicScrollItemWidget widget = _itemWidgetsPool.GetWidget(item);
-        RectTransform widgetRectTransform = widget.rectTransform;
-        widgetRectTransform.SetParent(_scrollRect.content);
+        widget.rectTransform.SetParent(_scrollRect.content);
+        _widgets.Insert(index, widget);
+        
         widget.Fill(item);
-
-        var activeItem = new ActiveItem
-        {
-            index = itemIndex,
-            widget = widget,
-        };
-
-        LayoutRebuilder.ForceRebuildLayoutImmediate(widgetRectTransform);
-        Vector2 size = widgetRectTransform.rect.size;
-
-        var newPos = Vector2.zero;
-        if (fromHead)
-        {
-            Vector2 deltaPos = Vector2.up * (size.y + _spacing);
-            newPos.y = GetHeadPosition() + deltaPos.y;
-        }
-        else
-        {
-            newPos.y = GetTailPosition() - _spacing;
-        }
-
-        widgetRectTransform.anchoredPosition = newPos;
-
-        _activeItems.Add(activeItem);
-        _activeItems.Sort((a, b) => a.index.CompareTo(b.index));
+        LayoutRebuilder.ForceRebuildLayoutImmediate(widget.rectTransform);
+        
+        return widget;
     }
 
     float GetHeadPosition()
     {
-        if (_activeItems.Count == 0)
+        if (_widgets.Count == 0)
             return 0f;
 
-        return _activeItems[0].widget.rectTransform.anchoredPosition.y;
+        return _widgets[0].rectTransform.anchoredPosition.y;
     }
 
     float GetTailPosition()
     {
-        if (_activeItems.Count == 0)
+        if (_widgets.Count == 0)
             return 0f;
 
-        var widgetRt = _activeItems[_activeItems.Count - 1].widget.rectTransform;
+        var widgetRt = _widgets[_widgets.Count - 1].rectTransform;
         return widgetRt.anchoredPosition.y - widgetRt.rect.height;
     }
 }

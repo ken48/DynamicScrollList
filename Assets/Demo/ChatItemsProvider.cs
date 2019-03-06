@@ -19,8 +19,39 @@ public class ChatItem2 : ChatItem
     public int donationValue;
 }
 
-public class ChatItemsProvider : IDynamicScrollItemProvider
+// Todo: maybe move to common code
+class DynamicScrollItemIterator : IDynamicScrollItemProviderIterator
 {
+    public IDynamicScrollItem current => _current >= 0 && _current < _items?.Length ? _items[_current] : null;
+    public bool isStart => _current == -1; 
+
+    IDynamicScrollItem[] _items;
+    int _current;
+
+    public DynamicScrollItemIterator(IDynamicScrollItem[] items)
+    {
+        _items = items;
+        SetCurrent(-1);
+    }
+
+    public void MovePrevious()
+    {
+        SetCurrent(_current - 1);
+    }
+        
+    public void MoveNext()
+    {
+        SetCurrent(_current + 1);
+    }
+
+    void SetCurrent(int value)
+    {
+        _current = Mathf.Clamp(value, -1, _items.Length);
+    }
+}
+
+public class ChatItemsProvider : IDynamicScrollItemProvider
+{    
     readonly ChatItem[] _items;
 
     public ChatItemsProvider(ChatItem[] items)
@@ -28,11 +59,9 @@ public class ChatItemsProvider : IDynamicScrollItemProvider
         _items = items;
     }
 
-    public IDynamicScrollItem GetItemByIndex(int index)
+    public IDynamicScrollItemProviderIterator GetIterator()
     {
-        // If null then no data for index.
-        // Well, we can stop scrolling.
-        return index >= 0 && index < _items?.Length ? _items[index] : null;
+        return new DynamicScrollItemIterator(_items);
     }
 }
 
