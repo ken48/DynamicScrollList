@@ -252,6 +252,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _scrollWidget: {fileID: 944212434}
   _fpsCoef: 1
+  _itemsCount: 30
 --- !u!20 &519420031
 Camera:
   m_ObjectHideFlags: 0
@@ -395,7 +396,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -200, y: 300}
+  m_SizeDelta: {x: -200, y: 120}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &944212431
 MonoBehaviour:

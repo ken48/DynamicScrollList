@@ -84,6 +84,13 @@ public class DynamicScrollWidget : MonoBehaviour
                 if (viewportWorldRect.yMax < rt.y)
                     break;
             }
+            else
+            {
+                // Todo: the bug is here
+                float nextHeadBottomPosition = GetHeadPosition() + _spacing;
+                if (viewportWorldRect.yMax < _scrollRect.content.TransformPoint(new Vector3(0, nextHeadBottomPosition, 0)).y)
+                    break;
+            }
 
             float previousHeadPosition = GetHeadPosition();
             if (!_viewport.HeadMovePrevious())
@@ -107,6 +114,13 @@ public class DynamicScrollWidget : MonoBehaviour
                 if (viewportWorldRect.yMin > lb.y)
                    break;
             }
+            else
+            {
+                // Todo: the bug is here
+                float nextTailPosition = GetTailPosition() - _spacing;
+                if (viewportWorldRect.yMin > _scrollRect.content.TransformPoint(new Vector3(0, nextTailPosition, 0)).y)
+                    break;
+            }
 
             float previousTailPosition = GetTailPosition();
             if (!_viewport.TailMoveNext())
@@ -128,7 +142,7 @@ public class DynamicScrollWidget : MonoBehaviour
         IDynamicScrollItemWidget widget = _viewport.tailWidget;
         RectTransform widgetRectTransform = widget?.rectTransform;
         return widgetRectTransform != null ? widgetRectTransform.anchoredPosition.y - widgetRectTransform.rect.height :
-            _lastHeadPosition;
+            _lastTailPosition;
     }
 
     bool IsWidgetOverlapsViewport(IDynamicScrollItemWidget widget, Rect viewportWorldRect)

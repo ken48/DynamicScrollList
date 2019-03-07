@@ -8,12 +8,15 @@ public class Demo : MonoBehaviour
     [SerializeField]
     [Range(0.1f, 1f)]
     float _fpsCoef = 1f;
+    [SerializeField]
+    [Range(1, 100)]
+    int _itemsCount = 20;
 
     void Awake()
     {
         QualitySettings.vSyncCount = 0;
     
-        var chatItems = new ChatItem[100];
+        var chatItems = new ChatItem[_itemsCount];
         for (int i = 0; i < chatItems.Length; i++)
             chatItems[i] = UnityEngine.Random.value < 0.5f ? Helpers.GenerateChatItem1() : Helpers.GenerateChatItem2();
 
