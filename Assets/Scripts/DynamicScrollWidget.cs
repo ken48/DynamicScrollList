@@ -1,37 +1,5 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
-
-public interface IDynamicScrollItem
-{
-}
-
-public interface IDynamicScrollItemProviderIterator
-{
-    IDynamicScrollItem current { get; }
-    bool isStart { get; }
-
-    void MovePrevious();
-    void MoveNext();
-}
-
-public interface IDynamicScrollItemProvider
-{    
-    IDynamicScrollItemProviderIterator GetIterator();
-}
-
-public interface IDynamicScrollItemWidget
-{
-    GameObject go { get; }
-    RectTransform rectTransform { get; }
-    void Fill(IDynamicScrollItem item);
-}
-
-public interface IDynamicScrollItemWidgetProvider
-{
-    IDynamicScrollItemWidget GetNewItemWidget(IDynamicScrollItem item, Transform rootNode);
-    void ReturnItemWidget(IDynamicScrollItemWidget itemWidget);
-}
 
 [RequireComponent(typeof(ScrollRect))]
 public class DynamicScrollWidget : MonoBehaviour
@@ -40,161 +8,133 @@ public class DynamicScrollWidget : MonoBehaviour
     float _spacing;
 
     ScrollRect _scrollRect;
-    DynamicScrollItemWidgetsPool _itemWidgetsPool;
-    List<IDynamicScrollItemWidget> _widgets;
-    IDynamicScrollItemProviderIterator _headIterator;
-    IDynamicScrollItemProviderIterator _tailIterator;
+    DynamicScrollViewport _viewport;
     float _lastHeadPosition;
     float _lastTailPosition;
+    float _lastScrollNormalizedPosition;
 
     public void Init(IDynamicScrollItemProvider itemProvider, IDynamicScrollItemWidgetProvider itemWidgetProvider)
     {
         _scrollRect = GetComponent<ScrollRect>();
         _scrollRect.onValueChanged.AddListener(OnScroll);
 
-        _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, _scrollRect.content);
-        _widgets = new List<IDynamicScrollItemWidget>();
-        _headIterator = itemProvider.GetIterator();
-        _tailIterator = itemProvider.GetIterator();
+        _viewport = new DynamicScrollViewport(itemProvider, itemWidgetProvider, _scrollRect.content);
     }
 
     public void Shutdown()
     {
-        foreach (IDynamicScrollItemWidget widget in _widgets)
-            _itemWidgetsPool.ReturnWidget(widget);
-        _itemWidgetsPool.Dispose();
+        _viewport.Dispose();
     }
 
     void OnScroll(Vector2 normalizedPosition)
     {
         // Todo: generalization for horizontal, vertical, from top, from bottom...
         // Todo: what if we remove some elements from data during scrolling?           
-        // Todo: what if there will be no active items after removing?
-        // It can be on fast scrolling at low fps when the scroll step per one frame will more than viewport size
-        // Cache last removed or (first/last active) for head or tail pivots
         
         // Todo: known bug: on fast scrolling some items are skipped
-        // Todo: known bug: sometimes (may be linked bug) content size is bigger than sum of items 
-        // Todo: known bug: sometimes there are no widget items at all. _headIterator == lastItem, tailIterator == lastItem + 1 
+        // Todo: known bug: sometimes (may be linked bug) content size is bigger than sum of items
         
         Rect viewportWorldRect = RectHelpers.GetWorldRect(_scrollRect.viewport);
-        RemoveWidget(viewportWorldRect, true);
-        RemoveWidget(viewportWorldRect, false);
-        AddHead(viewportWorldRect);
-        AddTail(viewportWorldRect);
 
-        if (_widgets.Count > 0)
+        if (normalizedPosition.y > _lastScrollNormalizedPosition)
+        {
+            TryRemoveTail(viewportWorldRect);
+            TryAddHead(viewportWorldRect);
+        }
+        else
+        {
+            TryRemoveHead(viewportWorldRect);
+            TryAddTail(viewportWorldRect);
+        }            
+
+        // Todo: optimization - do it only if widgets changed
+        // Maybe we should subtract previous viewport size and add current viewport size (the sum of all widgets rect with spacings)
+        if (_viewport.headWidget != null)
         {
             _lastHeadPosition = GetHeadPosition();
             _lastTailPosition = GetTailPosition();
-            if (_scrollRect.content.rect.height < Mathf.Abs(_lastTailPosition))
-                _scrollRect.content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Abs(_lastTailPosition));
+
+            float absTailPosition = Mathf.Abs(_lastTailPosition);
+            if (_scrollRect.content.rect.height < absTailPosition)
+                _scrollRect.content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, absTailPosition);
         }
+
+        _lastScrollNormalizedPosition = normalizedPosition.y;
     }
 
-    void RemoveWidget(Rect viewportWorldRect, bool head)
+    void TryRemoveHead(Rect viewportWorldRect)
     {
-        while (_widgets.Count > 0)
-        {
-            int index = head ? 0 : _widgets.Count - 1;
-            IDynamicScrollItemWidget widget = _widgets[index];
-            Rect widgetWorldRect = RectHelpers.GetWorldRect(widget.rectTransform);
-            if (widgetWorldRect.Overlaps(viewportWorldRect))
-                break;
-
-            _itemWidgetsPool.ReturnWidget(widget);
-            _widgets.RemoveAt(index);
-            
-            // Todo: the bug is here!!!
-            // |   |   |   |
-            // V   V   V   V 
-            if (head)
-                _headIterator.MoveNext();
-            else
-                _tailIterator.MovePrevious();
-        }
+        while (_viewport.headWidget != null && !IsWidgetOverlapsViewport(_viewport.headWidget, viewportWorldRect))
+            _viewport.HeadMoveNext();
+    }
+    
+    void TryRemoveTail(Rect viewportWorldRect)
+    {
+        while (_viewport.tailWidget != null && !IsWidgetOverlapsViewport(_viewport.tailWidget, viewportWorldRect))
+            _viewport.TailMovePrevious();
     }
 
-    void AddHead(Rect viewportWorldRect)
+    void TryAddHead(Rect viewportWorldRect)
     {        
-        if (_widgets.Count == 0)
-            return;
-        
-        if (_headIterator.isStart)
-            _headIterator.MoveNext();
-        
         while (true)
         {
-            // Check free space from head
-            IDynamicScrollItemWidget headWidget = _widgets[0];
-            Vector2 rt = headWidget.rectTransform.TransformPoint(headWidget.rectTransform.rect.max + Vector2.one * _spacing);
-            if (viewportWorldRect.yMax < rt.y)
-                break;
-
-            _headIterator.MovePrevious();
-            IDynamicScrollItem prevItem = _headIterator.current;
-            if (prevItem == null)
-                break;
-
-            float headPosition = GetHeadPosition();
-            IDynamicScrollItemWidget widget = AddWidget(prevItem, 0);
-            Vector2 size = widget.rectTransform.rect.size;
-            Vector2 deltaPos = Vector2.up * (size.y + _spacing);
-            widget.rectTransform.anchoredPosition = new Vector2(0f, headPosition + deltaPos.y);
-        }
-    }
-
-    void AddTail(Rect viewportWorldRect)
-    {
-        while (true)
-        {
-            if (_widgets.Count > 0)
+            IDynamicScrollItemWidget headWidget = _viewport.headWidget;
+            if (headWidget != null)
             {
-                // Check free space from tail
-                IDynamicScrollItemWidget tailWidget = _widgets[_widgets.Count - 1];
-                Vector2 lb = tailWidget.rectTransform.TransformPoint(tailWidget.rectTransform.rect.min - Vector2.one * _spacing);
-                if (viewportWorldRect.yMin > lb.y)
+                Vector2 rt = headWidget.rectTransform.TransformPoint(headWidget.rectTransform.rect.max + Vector2.one * _spacing);
+                if (viewportWorldRect.yMax < rt.y)
                     break;
             }
 
-            _tailIterator.MoveNext();
-            IDynamicScrollItem nextItem = _tailIterator.current;
-            if (nextItem == null)
+            float previousHeadPosition = GetHeadPosition();
+            if (!_viewport.HeadMovePrevious())
                 break;
 
-            float tailPosition = GetTailPosition();
-            IDynamicScrollItemWidget widget = AddWidget(nextItem, _widgets.Count);            
-            widget.rectTransform.anchoredPosition = new Vector2(0f, tailPosition - _spacing);
+            IDynamicScrollItemWidget newHeadWidget = _viewport.headWidget;
+            Vector2 size = newHeadWidget.rectTransform.rect.size;
+            Vector2 deltaPos = Vector2.up * (size.y + _spacing);
+            newHeadWidget.rectTransform.anchoredPosition = new Vector2(0f, previousHeadPosition + deltaPos.y);
         }
     }
 
-    IDynamicScrollItemWidget AddWidget(IDynamicScrollItem item, int index)
+    void TryAddTail(Rect viewportWorldRect)
     {
-        IDynamicScrollItemWidget widget = _itemWidgetsPool.GetWidget(item);
-        widget.rectTransform.SetParent(_scrollRect.content);
-        _widgets.Insert(index, widget);
-        
-        widget.Fill(item);
-        LayoutRebuilder.ForceRebuildLayoutImmediate(widget.rectTransform);
-        
-        return widget;
+        while (true)
+        {
+            IDynamicScrollItemWidget tailWidget = _viewport.tailWidget;
+            if (tailWidget != null)
+            {
+                Vector2 lb = tailWidget.rectTransform.TransformPoint(tailWidget.rectTransform.rect.min - Vector2.one * _spacing);
+                if (viewportWorldRect.yMin > lb.y)
+                   break;
+            }
+
+            float previousTailPosition = GetTailPosition();
+            if (!_viewport.TailMoveNext())
+                break;
+            
+            IDynamicScrollItemWidget newTailWidget = _viewport.tailWidget;
+            newTailWidget.rectTransform.anchoredPosition = new Vector2(0f, previousTailPosition - _spacing);
+        }
     }
 
     float GetHeadPosition()
     {
-        if (_widgets.Count == 0)
-            return _lastHeadPosition;
-
-        return _widgets[0].rectTransform.anchoredPosition.y;
+        IDynamicScrollItemWidget widget = _viewport.headWidget;
+        return widget?.rectTransform.anchoredPosition.y ?? _lastHeadPosition;
     }
 
     float GetTailPosition()
     {
-        if (_widgets.Count == 0)
-            return _lastTailPosition;
+        IDynamicScrollItemWidget widget = _viewport.tailWidget;
+        RectTransform widgetRectTransform = widget?.rectTransform;
+        return widgetRectTransform != null ? widgetRectTransform.anchoredPosition.y - widgetRectTransform.rect.height :
+            _lastHeadPosition;
+    }
 
-        var widgetRt = _widgets[_widgets.Count - 1].rectTransform;
-        return widgetRt.anchoredPosition.y - widgetRt.rect.height;
+    bool IsWidgetOverlapsViewport(IDynamicScrollItemWidget widget, Rect viewportWorldRect)
+    {
+        return RectHelpers.GetWorldRect(widget.rectTransform).Overlaps(viewportWorldRect);
     }
 }
 

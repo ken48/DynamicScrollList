@@ -19,41 +19,8 @@ public class ChatItem2 : ChatItem
     public int donationValue;
 }
 
-// Todo: maybe move to common code
-class DynamicScrollItemIterator : IDynamicScrollItemProviderIterator
-{
-    public IDynamicScrollItem current => _current >= 0 && _current < _itemsProvider.items?.Length ? _itemsProvider.items[_current] : null;
-    public bool isStart => _current == -1; 
-
-    ChatItemsProvider _itemsProvider;
-    int _current;
-
-    public DynamicScrollItemIterator(ChatItemsProvider itemsProvider)
-    {
-        _itemsProvider = itemsProvider;
-        SetCurrent(-1);
-    }
-
-    public void MovePrevious()
-    {
-        SetCurrent(_current - 1);
-    }
-        
-    public void MoveNext()
-    {
-        SetCurrent(_current + 1);
-    }
-
-    void SetCurrent(int value)
-    {
-        _current = Mathf.Clamp(value, -1, _itemsProvider.items.Length);
-    }
-}
-
 public class ChatItemsProvider : IDynamicScrollItemProvider
-{
-    public ChatItem[] items => _items;
-    
+{    
     ChatItem[] _items;
 
     public ChatItemsProvider(ChatItem[] items)
@@ -61,15 +28,9 @@ public class ChatItemsProvider : IDynamicScrollItemProvider
         _items = items;
     }
 
-    public IDynamicScrollItemProviderIterator GetIterator()
+    public IDynamicScrollItem GetItemByIndex(int index)
     {
-        return new DynamicScrollItemIterator(this);
-    }
-
-    // Can change data on fly
-    public void SetData(ChatItem[] items)
-    {
-        _items = items;
+        return index >= 0 && index < _items?.Length ? _items[index] : null;
     }
 }
 

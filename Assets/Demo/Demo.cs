@@ -20,6 +20,11 @@ public class Demo : MonoBehaviour
         _scrollWidget.Init(new ChatItemsProvider(chatItems), new ChatItemWidgetsProvider());
     }
 
+    void OnDestroy()
+    {
+        _scrollWidget.Shutdown();
+    }
+
     void Update()
     {
         Application.targetFrameRate = Mathf.RoundToInt(60 * _fpsCoef);
