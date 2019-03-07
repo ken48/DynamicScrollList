@@ -31,8 +31,7 @@ public class DynamicScrollWidget : MonoBehaviour
         // Todo: generalization for horizontal, vertical, from top, from bottom...
         // Todo: what if we remove some elements from data during scrolling?           
         
-        // Todo: known bug: on fast scrolling some items are skipped
-        // Todo: known bug: sometimes (may be linked bug) content size is bigger than sum of items
+        // Todo: known bug: position of elements on fast scrolling when removed all widgets
         
         Rect viewportWorldRect = RectHelpers.GetWorldRect(_scrollRect.viewport);
 
@@ -45,7 +44,7 @@ public class DynamicScrollWidget : MonoBehaviour
         {
             TryRemoveHead(viewportWorldRect);
             TryAddTail(viewportWorldRect);
-        }            
+        }
 
         // Todo: optimization - do it only if widgets changed
         // Maybe we should subtract previous viewport size and add current viewport size (the sum of all widgets rect with spacings)
