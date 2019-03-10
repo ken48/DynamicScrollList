@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class DynamicScrollViewport : IDisposable
+public class DynamicScrollViewport2 : IDisposable
 {
     public IDynamicScrollItemWidget headWidget => _widgets.Count > 0 ? _widgets[0] : null;
     public IDynamicScrollItemWidget tailWidget => _widgets.Count > 0 ? _widgets[_widgets.Count - 1] : null;
@@ -14,7 +14,7 @@ public class DynamicScrollViewport : IDisposable
     int _headIndex;
     int _tailIndex;
 
-    public DynamicScrollViewport(IDynamicScrollItemProvider itemProvider,
+    public DynamicScrollViewport2(IDynamicScrollItemProvider itemProvider,
         IDynamicScrollItemWidgetProvider itemWidgetProvider, Transform itemWidgetsRoot)
     {
         _itemProvider = itemProvider;
@@ -34,11 +34,11 @@ public class DynamicScrollViewport : IDisposable
         IDynamicScrollItem newHeadItem = _itemProvider.GetItemByIndex(newHeadIndex);
         if (newHeadItem == null)
             return false;
-        
-        AddWidget(newHeadItem, 0);
 
         _headIndex = newHeadIndex;
         CheckIndices();
+        
+        AddWidget(newHeadItem, true);
 
         return true;
     }
@@ -47,14 +47,13 @@ public class DynamicScrollViewport : IDisposable
     {
         if (headWidget == null)
             return false;
-        
-        _itemWidgetsPool.ReturnWidget(headWidget);
-        _widgets.RemoveAt(0);
 
         _headIndex++;
         if (_tailIndex < _headIndex)
             _tailIndex = _headIndex;
         CheckIndices();
+        
+        RemoveWidget(true);
         
         return true;
     }
@@ -63,14 +62,13 @@ public class DynamicScrollViewport : IDisposable
     {
         if (tailWidget == null)
             return false;
-
-        _itemWidgetsPool.ReturnWidget(tailWidget);
-        _widgets.RemoveAt(_widgets.Count - 1);
-
+        
         _tailIndex--;
         if (_headIndex > _tailIndex)
             _headIndex = _tailIndex;
         CheckIndices();
+
+        RemoveWidget(false);
         
         return true;
     }
@@ -82,22 +80,34 @@ public class DynamicScrollViewport : IDisposable
         if (newTailItem == null)
             return false;
         
-        AddWidget(newTailItem, _widgets.Count);
-        
         _tailIndex = newTailIndex;
         if (_headIndex == -1)
             _headIndex = _tailIndex;
         CheckIndices();
+        
+        AddWidget(newTailItem, false);
 
         return true;
     }
     
-    void AddWidget(IDynamicScrollItem item, int index)
+    void AddWidget(IDynamicScrollItem item, bool head)
     {
         IDynamicScrollItemWidget widget = _itemWidgetsPool.GetWidget(item);
-        _widgets.Insert(index, widget);
+        _widgets.Insert(GetWidgetIndex(head), widget);
         widget.Fill(item);
         LayoutRebuilder.ForceRebuildLayoutImmediate(widget.rectTransform);
+    }
+
+    void RemoveWidget(bool head)
+    {
+        int index = GetWidgetIndex(head);
+        _itemWidgetsPool.ReturnWidget(_widgets[index]);
+        _widgets.RemoveAt(index);
+    }
+
+    int GetWidgetIndex(bool head)
+    {
+        return head ? 0 : _widgets.Count - 1;
     }
 
     void CheckIndices()

@@ -2,13 +2,13 @@
 using UnityEngine.UI;
 
 [RequireComponent(typeof(ScrollRect))]
-public class DynamicScrollWidget : MonoBehaviour
+public class DynamicScrollWidget2 : MonoBehaviour
 {
     [SerializeField]
     float _spacing;
 
     ScrollRect _scrollRect;
-    DynamicScrollViewport _viewport;
+    DynamicScrollViewport2 _viewport;
     float _lastHeadPosition;
     float _lastTailPosition;
     float _lastScrollNormalizedPosition;
@@ -18,7 +18,7 @@ public class DynamicScrollWidget : MonoBehaviour
         _scrollRect = GetComponent<ScrollRect>();
         _scrollRect.onValueChanged.AddListener(OnScroll);
 
-        _viewport = new DynamicScrollViewport(itemProvider, itemWidgetProvider, _scrollRect.content);
+        _viewport = new DynamicScrollViewport2(itemProvider, itemWidgetProvider, _scrollRect.content);
     }
 
     public void Shutdown()

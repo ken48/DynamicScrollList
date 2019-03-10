@@ -4,7 +4,7 @@ using UnityEngine;
 public class Demo : MonoBehaviour
 {
     [SerializeField]
-    DynamicScrollWidget _scrollWidget;
+    DynamicScrollWidget2 _scrollWidget;
     [SerializeField]
     [Range(0.1f, 1f)]
     float _fpsCoef = 1f;

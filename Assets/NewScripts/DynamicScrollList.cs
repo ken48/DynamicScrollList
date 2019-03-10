@@ -1,44 +1,29 @@
-﻿using System;
-using UnityEngine;
-using UnityEngine.EventSystems;
+﻿using UnityEngine;
 
-public class DynamicScrollList : MonoBehaviour, IDragHandler
+public class DynamicScrollList : MonoBehaviour
 {
-    public event Action<float> onScroll;
-
-    [SerializeField] 
-    RectTransform.Axis _axis;
-    [SerializeField] 
-    RectTransform _viewport;
     [SerializeField]
-    RectTransform _content;
-
-    Canvas _canvas;
+    ScrollWidget _scrollWidget;
+    [SerializeField]
+    DynamicScrollViewport _dynamicViewport;
+    [SerializeField]
+    DynamicScrollContent _dynamicContent;
 
     void Awake()
     {
-        _canvas = _viewport.GetComponentInParent<Canvas>();
+        _scrollWidget.onScroll += OnScroll;
     }
 
-    public void OnDrag(PointerEventData eventData)
+    void OnDestroy()
     {
-        Vector2 localDelta = RectTransformHelpers.ScreenPointToLocalPoint(eventData.delta, _canvas);
-        OnScroll(_axis == RectTransform.Axis.Horizontal ? localDelta.x : localDelta.y);
+        _scrollWidget.onScroll -= OnScroll;
     }
 
     void OnScroll(float delta)
     {
-        Vector2 mask = _axis == RectTransform.Axis.Horizontal ? Vector2.right : Vector2.up;
-        _content.anchoredPosition += mask * delta;
+        ((RectTransform)_dynamicContent.transform).anchoredPosition += new Vector2(0f, delta);
         
-        onScroll?.Invoke(delta);
-    }
-}
-
-static class RectTransformHelpers
-{
-    public static Vector2 ScreenPointToLocalPoint(Vector2 screenPoint, Canvas canvas)
-    {
-        return screenPoint / canvas.scaleFactor;
+        // Check overlapping and call viewport moveNext...
+        
     }
 }
