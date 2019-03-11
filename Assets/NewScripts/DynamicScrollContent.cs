@@ -3,19 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class DynamicScrollContent : MonoBehaviour, IDisposable
+public class DynamicScrollContent : IDisposable
 {
-    public IDynamicScrollItemWidget headWidget => _widgets.Count > 0 ? _widgets[0] : null;
-    public IDynamicScrollItemWidget tailWidget => _widgets.Count > 0 ? _widgets[_widgets.Count - 1] : null;
-    
     DynamicScrollItemWidgetsPool _itemWidgetsPool;
     List<IDynamicScrollItemWidget> _widgets;
-    
-    // Todo: handle layout: position, spacing...
+    RectTransform _node;
+    float _spacing;
 
-    public void Init(IDynamicScrollItemWidgetProvider itemWidgetProvider)
+    public DynamicScrollContent(IDynamicScrollItemWidgetProvider itemWidgetProvider, RectTransform node, float spacing)
     {
-        _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, transform);
+        _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, node);
+        _node = node;
+        _spacing = spacing;
     }
 
     public void Dispose()
@@ -34,19 +33,29 @@ public class DynamicScrollContent : MonoBehaviour, IDisposable
         RemoveWidget(_widgets[0]);
         _widgets.RemoveAt(0);
     }
-    
+
     public void PushTail(IDynamicScrollItem item)
     {
         IDynamicScrollItemWidget widget = AddWidget(item);
         _widgets.Add(widget);
     }
-    
+
     public void PopTail()
     {
         RemoveWidget(_widgets[_widgets.Count - 1]);
         _widgets.RemoveAt(_widgets.Count - 1);
     }
-    
+
+    public bool CheckHead()
+    {
+        // Rect overlaps
+    }
+
+    public bool CheckTail()
+    {
+        // Rect overlaps
+    }
+
     IDynamicScrollItemWidget AddWidget(IDynamicScrollItem item)
     {
         IDynamicScrollItemWidget widget = _itemWidgetsPool.GetWidget(item);
