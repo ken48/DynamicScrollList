@@ -4,7 +4,7 @@ using UnityEngine;
 public class Demo : MonoBehaviour
 {
     [SerializeField]
-    DynamicScrollWidget2 _scrollWidget;
+    DynamicScrollList _scrollList;
     [SerializeField]
     [Range(0.1f, 1f)]
     float _fpsCoef = 1f;
@@ -15,17 +15,17 @@ public class Demo : MonoBehaviour
     void Awake()
     {
         QualitySettings.vSyncCount = 0;
-    
+
         var chatItems = new ChatItem[_itemsCount];
         for (int i = 0; i < chatItems.Length; i++)
             chatItems[i] = UnityEngine.Random.value < 0.5f ? Helpers.GenerateChatItem1() : Helpers.GenerateChatItem2();
 
-        _scrollWidget.Init(new ChatItemsProvider(chatItems), new ChatItemWidgetsProvider());
+        _scrollList.Init(new ChatItemsProvider(chatItems), new ChatItemWidgetsProvider());
     }
 
     void OnDestroy()
     {
-        _scrollWidget.Shutdown();
+        _scrollList.Shutdown();
     }
 
     void Update()

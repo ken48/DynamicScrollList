@@ -29,10 +29,10 @@ public class DynamicScrollWidget2 : MonoBehaviour
     void OnScroll(Vector2 normalizedPosition)
     {
         // Todo: generalization for horizontal, vertical, from top, from bottom...
-        // Todo: what if we remove some elements from data during scrolling?           
-        
+        // Todo: what if we remove some elements from data during scrolling?
+
         // Todo: known bug: position of elements on fast scrolling when removed all widgets
-        
+
         Rect viewportWorldRect = RectHelpers.GetWorldRect(_scrollRect.viewport);
 
         if (normalizedPosition.y > _lastScrollNormalizedPosition)
@@ -66,7 +66,7 @@ public class DynamicScrollWidget2 : MonoBehaviour
         while (_viewport.headWidget != null && !IsWidgetOverlapsViewport(_viewport.headWidget, viewportWorldRect))
             _viewport.HeadMoveNext();
     }
-    
+
     void TryRemoveTail(Rect viewportWorldRect)
     {
         while (_viewport.tailWidget != null && !IsWidgetOverlapsViewport(_viewport.tailWidget, viewportWorldRect))
@@ -74,7 +74,7 @@ public class DynamicScrollWidget2 : MonoBehaviour
     }
 
     void TryAddHead(Rect viewportWorldRect)
-    {        
+    {
         while (true)
         {
             IDynamicScrollItemWidget headWidget = _viewport.headWidget;
@@ -125,7 +125,7 @@ public class DynamicScrollWidget2 : MonoBehaviour
             float previousTailPosition = GetTailPosition();
             if (!_viewport.TailMoveNext())
                 break;
-            
+
             IDynamicScrollItemWidget newTailWidget = _viewport.tailWidget;
             newTailWidget.rectTransform.anchoredPosition = new Vector2(0f, previousTailPosition - _spacing);
         }
@@ -148,16 +148,5 @@ public class DynamicScrollWidget2 : MonoBehaviour
     bool IsWidgetOverlapsViewport(IDynamicScrollItemWidget widget, Rect viewportWorldRect)
     {
         return RectHelpers.GetWorldRect(widget.rectTransform).Overlaps(viewportWorldRect);
-    }
-}
-
-static class RectHelpers
-{
-    public static Rect GetWorldRect(RectTransform rectTransform)
-    {
-        Rect rect = rectTransform.rect;
-        Vector2 worldRectMin = rectTransform.TransformPoint(rect.min);
-        Vector2 worldRectMax = rectTransform.TransformPoint(rect.max);
-        return Rect.MinMaxRect(worldRectMin.x, worldRectMin.y, worldRectMax.x, worldRectMax.y);
     }
 }
