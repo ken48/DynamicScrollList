@@ -24,26 +24,22 @@ public class DynamicScrollContent : IDisposable
 
     public void PushHead(IDynamicScrollItem item)
     {
-        IDynamicScrollItemWidget widget = AddWidget(item);
-        _widgets.Insert(0, widget);
+        AddWidget(item, 0);
     }
 
     public void PopHead()
     {
-        RemoveWidget(_widgets[0]);
-        _widgets.RemoveAt(0);
+        RemoveWidget(0);
     }
 
     public void PushTail(IDynamicScrollItem item)
     {
-        IDynamicScrollItemWidget widget = AddWidget(item);
-        _widgets.Add(widget);
+        AddWidget(item, _widgets.Count);
     }
 
     public void PopTail()
     {
-        RemoveWidget(_widgets[_widgets.Count - 1]);
-        _widgets.RemoveAt(_widgets.Count - 1);
+        RemoveWidget(_widgets.Count - 1);
     }
 
     public bool CheckHead()
@@ -56,16 +52,17 @@ public class DynamicScrollContent : IDisposable
         // Rect overlaps
     }
 
-    IDynamicScrollItemWidget AddWidget(IDynamicScrollItem item)
+    void AddWidget(IDynamicScrollItem item, int index)
     {
         IDynamicScrollItemWidget widget = _itemWidgetsPool.GetWidget(item);
         widget.Fill(item);
         LayoutRebuilder.ForceRebuildLayoutImmediate(widget.rectTransform);
-        return widget;
+        _widgets.Insert(index, widget);
     }
 
-    void RemoveWidget(IDynamicScrollItemWidget widget)
+    void RemoveWidget(int index)
     {
-        _itemWidgetsPool.ReturnWidget(widget);
+        _itemWidgetsPool.ReturnWidget(_widgets[index]);
+        _widgets.RemoveAt(index);
     }
 }

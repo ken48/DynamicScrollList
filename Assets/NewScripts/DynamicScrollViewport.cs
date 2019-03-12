@@ -5,7 +5,7 @@ public class DynamicScrollViewport
     public int headIndex => _headIndex;
     public int tailIndex => _tailIndex;
 
-    Func<int, bool> _onCheckItem;
+    readonly Func<int, bool> _onCheckItem;
     int _headIndex;
     int _tailIndex;
 

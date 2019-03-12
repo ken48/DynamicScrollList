@@ -6,9 +6,9 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 {
     public event Action<float> onScroll;
 
-    [SerializeField] 
+    [SerializeField]
     RectTransform.Axis _axis;
-    [SerializeField] 
+    [SerializeField]
     RectTransform _viewport;
 
     Vector2 _prevPos;
@@ -28,9 +28,8 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         if (!_isDragging)
             return;
 
-        Vector2 localPos;
         RectTransformUtility.ScreenPointToLocalPointInRectangle(_viewport, eventData.position,
-            eventData.pressEventCamera, out localPos);
+            eventData.pressEventCamera, out Vector2 localPos);
 
         Vector2 localDelta = localPos - _prevPos;
         _prevPos = localPos;
