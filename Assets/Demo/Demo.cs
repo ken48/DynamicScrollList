@@ -12,7 +12,8 @@ public class Demo : MonoBehaviour
     [Range(1, 100)]
     int _itemsCount = 20;
 
-    void Start() // Start due to OnScroll on ScrollList.Init
+    // Start instead of Awake due to OnScroll on ScrollList.Init
+    void Start()
     {
         QualitySettings.vSyncCount = 0;
 

@@ -12,6 +12,8 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     RectTransform _viewport;
 
     Vector2 _prevPos;
+    Vector2 _velocity;
+    Vector2 _position;
     bool _isDragging;
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -31,9 +33,12 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         RectTransformUtility.ScreenPointToLocalPointInRectangle(_viewport, eventData.position,
             eventData.pressEventCamera, out Vector2 localPos);
 
-        Vector2 localDelta = localPos - _prevPos;
+        Vector2 mask = _axis == RectTransform.Axis.Horizontal ? Vector2.right : Vector2.up;
+        Vector2 localDelta = Vector2.Scale(localPos - _prevPos, mask);
+        if (localDelta.sqrMagnitude > _velocity.sqrMagnitude)
+            _velocity = localDelta;
+
         _prevPos = localPos;
-        OnScroll(_axis == RectTransform.Axis.Horizontal ? localDelta.x : localDelta.y);
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -41,9 +46,16 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         _isDragging = false;
     }
 
-    void OnScroll(float delta)
+    void LateUpdate()
     {
-        Vector2 mask = _axis == RectTransform.Axis.Horizontal ? Vector2.right : Vector2.up;
-        onScroll?.Invoke(delta);
+        if (_velocity.sqrMagnitude < 0.001f)
+            return;
+
+        const float speedCoef = 27f;
+        Vector2 delta = _velocity * speedCoef * Time.unscaledDeltaTime;
+        _velocity *= 0.92f;
+
+        onScroll?.Invoke(_axis == RectTransform.Axis.Horizontal ? delta.x : delta.y);
+        _position += delta;
     }
 }
