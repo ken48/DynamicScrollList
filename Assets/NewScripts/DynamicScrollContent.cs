@@ -32,14 +32,21 @@ public class DynamicScrollContent : IDisposable
     {
         if (_headEdge && delta < 0f)
         {
-            _node.anchoredPosition = Vector2.zero;
+            if (!IsEmpty())
+            {
+                var firstWidgetRt = _widgets[GetHeadIndex()].rectTransform;
+                _node.anchoredPosition = new Vector2(0, -firstWidgetRt.anchoredPosition.y);
+            }
             return;
         }
 
         if (_tailEdge && delta > 0f)
         {
-            var lastWidgetRt = _widgets[_widgets.Count - 1].rectTransform;
-            _node.anchoredPosition = new Vector2(0, -lastWidgetRt.anchoredPosition.y + lastWidgetRt.rect.height - _viewportSize);
+            if (!IsEmpty())
+            {
+                var lastWidgetRt = _widgets[GetTailIndex()].rectTransform;
+                _node.anchoredPosition = new Vector2(0, -lastWidgetRt.anchoredPosition.y + lastWidgetRt.rect.height - _viewportSize);
+            }
             return;
         }
 
