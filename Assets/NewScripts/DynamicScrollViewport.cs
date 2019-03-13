@@ -12,7 +12,8 @@ public class DynamicScrollViewport
     public DynamicScrollViewport(Func<int, bool> onCheckItem)
     {
         _onCheckItem = onCheckItem;
-        _headIndex = _tailIndex = -1;
+        _headIndex = 0;
+        _tailIndex = -1;
     }
 
     public bool HeadMovePrevious()

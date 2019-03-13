@@ -5,12 +5,18 @@ using UnityEngine.UI;
 
 public class DynamicScrollContent : IDisposable
 {
+    enum Direction
+    {
+        Head,
+        Tail
+    }
+
     DynamicScrollItemWidgetsPool _itemWidgetsPool;
     List<IDynamicScrollItemWidget> _widgets;
     RectTransform _node;
     float _viewportSize;
     float _spacing;
-    float _lastDelta;
+    Direction _lastDirection;
 
     public DynamicScrollContent(IDynamicScrollItemWidgetProvider itemWidgetProvider, RectTransform node, float viewportSize, float spacing)
     {
@@ -29,7 +35,7 @@ public class DynamicScrollContent : IDisposable
     public void Move(float delta)
     {
         _node.anchoredPosition += new Vector2(0, delta);
-        _lastDelta = delta;
+        _lastDirection = delta > 0f ? Direction.Head : Direction.Tail;
     }
 
     public void PushHead(IDynamicScrollItem item)
@@ -119,10 +125,10 @@ public class DynamicScrollContent : IDisposable
 
         if (IsEmpty())
         {
-            if (_lastDelta >= 0f)
+            if (_lastDirection == Direction.Head)
                 _node.anchoredPosition = Vector2.zero;
             else
-                _node.anchoredPosition += new Vector2(0, -_viewportSize);
+                _node.anchoredPosition = new Vector2(0, -_viewportSize);
         }
     }
 
