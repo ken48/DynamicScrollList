@@ -38,11 +38,15 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         if (localDelta.sqrMagnitude > _velocity.sqrMagnitude)
             _velocity = localDelta;
 
+        // Todo: invoke OnScroll here
+
         _prevPos = localPos;
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        // Todo: set velocity here
+
         _isDragging = false;
     }
 
