@@ -5,18 +5,14 @@ using UnityEngine.UI;
 
 public class DynamicScrollContent : IDisposable
 {
-    enum Direction
-    {
-        Head,
-        Tail
-    }
-
     DynamicScrollItemWidgetsPool _itemWidgetsPool;
     List<IDynamicScrollItemWidget> _widgets;
     RectTransform _node;
     float _viewportSize;
     float _spacing;
-    Direction _lastDirection;
+
+    bool _headEdge;
+    bool _tailEdge;
 
     public DynamicScrollContent(IDynamicScrollItemWidgetProvider itemWidgetProvider, RectTransform node, float viewportSize, float spacing)
     {
@@ -34,8 +30,20 @@ public class DynamicScrollContent : IDisposable
 
     public void Move(float delta)
     {
+        if (_headEdge && delta < 0f)
+        {
+            _node.anchoredPosition = Vector2.zero;
+            return;
+        }
+
+        if (_tailEdge && delta > 0f)
+        {
+            var lastWidgetRt = _widgets[_widgets.Count - 1].rectTransform;
+            _node.anchoredPosition = new Vector2(0, -lastWidgetRt.anchoredPosition.y + lastWidgetRt.rect.height - _viewportSize);
+            return;
+        }
+
         _node.anchoredPosition += new Vector2(0, delta);
-        _lastDirection = delta > 0f ? Direction.Head : Direction.Tail;
     }
 
     public void PushHead(IDynamicScrollItem item)
@@ -47,6 +55,8 @@ public class DynamicScrollContent : IDisposable
         Vector2 size = newHeadWidget.rectTransform.rect.size;
         Vector2 deltaPos = Vector2.up * (size.y + _spacing);
         newHeadWidget.rectTransform.anchoredPosition = new Vector2(0f, previousHeadPosition + deltaPos.y);
+
+        _headEdge = false;
     }
 
     public void PushTail(IDynamicScrollItem item)
@@ -56,16 +66,32 @@ public class DynamicScrollContent : IDisposable
 
         IDynamicScrollItemWidget newTailWidget = _widgets[GetTailIndex()];
         newTailWidget.rectTransform.anchoredPosition = new Vector2(0f, previousTailPosition - _spacing);
+
+        _tailEdge = false;
     }
 
     public void PopHead()
     {
         RemoveWidget(GetHeadIndex());
+
+        _headEdge = false;
     }
 
     public void PopTail()
     {
         RemoveWidget(GetTailIndex());
+
+        _tailEdge = false;
+    }
+
+    public void SetHeadEdge()
+    {
+        _headEdge = true;
+    }
+
+    public void SetTailEdge()
+    {
+        _tailEdge = true;
     }
 
     public bool CanPushHead(Rect viewportWorldRect)
@@ -122,14 +148,6 @@ public class DynamicScrollContent : IDisposable
     {
         _itemWidgetsPool.ReturnWidget(_widgets[index]);
         _widgets.RemoveAt(index);
-
-        if (IsEmpty())
-        {
-            if (_lastDirection == Direction.Head)
-                _node.anchoredPosition = Vector2.zero;
-            else
-                _node.anchoredPosition = new Vector2(0, -_viewportSize);
-        }
     }
 
     bool IsEmpty()
