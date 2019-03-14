@@ -24,7 +24,7 @@ public class DynamicScrollList : MonoBehaviour
     {
         _itemProvider = itemProvider;
         _dynamicViewport = new DynamicScrollViewport(i => _itemProvider.GetItemByIndex(i) != null);
-        _dynamicContent = new DynamicScrollContent(itemWidgetProvider, _contentNode, _viewportNode.rect.height, _spacing);
+        _dynamicContent = new DynamicScrollContent(itemWidgetProvider, _viewportNode, _contentNode, _spacing);
 
         OnScroll(0f);
     }
