@@ -12,8 +12,6 @@ public class DynamicScrollContent : IDisposable
     float _spacing;
     float _lastHeadPosition;
     float _lastTailPosition;
-    bool _headEdge;
-    bool _tailEdge;
 
     public DynamicScrollContent(IDynamicScrollItemWidgetProvider itemWidgetProvider, RectTransform viewport, RectTransform node, float spacing)
     {
@@ -34,16 +32,21 @@ public class DynamicScrollContent : IDisposable
 
     public void Move(float delta)
     {
-        // Todo: check last positions and compare it with _node.anchoredPosition consider edges
-        // if (_headEdge && _node.anchoredPosition < 0f)
-        // ...
-        // else if (_tailEdge && _node.anchoredPosition > _lastTailPosition - _viewport.rect.height)
-        // ...
+        // Todo: get head edge from
 
-        // if (_headEdge && delta < 0f)
-        //     _node.anchoredPosition = Vector2.zero;
-        // else if (_tailEdge && delta > 0f)
-        //     _node.anchoredPosition = Vector2.down * (_lastTailPosition + _viewport.rect.height);
+        float headEdgePosition = -_lastHeadPosition;
+        if (_headEdge && _node.anchoredPosition.y + delta < headEdgePosition)
+        {
+            _node.anchoredPosition = Vector2.up * headEdgePosition;
+            return;
+        }
+
+        float bottomEdgePosition = -_lastTailPosition - _viewport.rect.height;
+        if (_tailEdge && _node.anchoredPosition.y + delta > bottomEdgePosition)
+        {
+            _node.anchoredPosition = Vector2.up * bottomEdgePosition;
+            return;
+        }
 
         _node.anchoredPosition += new Vector2(0, delta);
     }
@@ -55,8 +58,6 @@ public class DynamicScrollContent : IDisposable
         IDynamicScrollItemWidget newHeadWidget = _widgets[GetHeadIndex()];
         _lastHeadPosition += _spacing + newHeadWidget.rectTransform.rect.height;
         newHeadWidget.rectTransform.anchoredPosition = Vector2.up * _lastHeadPosition;
-
-        _headEdge = false;
     }
 
     public void PushTail(IDynamicScrollItem item)
@@ -67,8 +68,6 @@ public class DynamicScrollContent : IDisposable
         _lastTailPosition -= _spacing;
         newTailWidget.rectTransform.anchoredPosition = Vector2.up * _lastTailPosition;
         _lastTailPosition -= newTailWidget.rectTransform.rect.height;
-
-        _tailEdge = false;
     }
 
     public void PopHead()
@@ -77,8 +76,6 @@ public class DynamicScrollContent : IDisposable
         _lastHeadPosition -= _widgets[headIndex].rectTransform.rect.height + _spacing;
 
         RemoveWidget(headIndex);
-
-        _headEdge = false;
     }
 
     public void PopTail()
@@ -88,18 +85,6 @@ public class DynamicScrollContent : IDisposable
         _lastTailPosition += tailWidgetRectTransform.rect.height + _spacing;
 
         RemoveWidget(tailIndex);
-
-        _tailEdge = false;
-    }
-
-    public void SetHeadEdge()
-    {
-        _headEdge = true;
-    }
-
-    public void SetTailEdge()
-    {
-        _tailEdge = true;
     }
 
     public bool CanPushHead(Rect viewportWorldRect)
@@ -128,7 +113,6 @@ public class DynamicScrollContent : IDisposable
         }
         else
         {
-            // Todo: bug
             startPos = _node.TransformPoint(Vector2.up * _lastTailPosition).y;
         }
 
