@@ -55,6 +55,10 @@ public class DynamicScrollList : MonoBehaviour
             TryPopTail(viewportWorldRect);
             TryPushHead(viewportWorldRect);
         }
+
+        float edgesDelta = _dynamicContent.CheckEdges();
+        if (edgesDelta != 0f)
+            _scrollWidget.SetEdgesDelta(edgesDelta);
     }
 
     void TryPushHead(Rect viewportWorldRect)
@@ -62,7 +66,10 @@ public class DynamicScrollList : MonoBehaviour
         while (_dynamicContent.CanPushHead(viewportWorldRect))
         {
             if (!_dynamicViewport.HeadMovePrevious())
+            {
+                _dynamicContent.SetHeadEdge();
                 break;
+            }
 
             _dynamicContent.PushHead(_itemProvider.GetItemByIndex(_dynamicViewport.headIndex));
         }
@@ -73,7 +80,10 @@ public class DynamicScrollList : MonoBehaviour
         while (_dynamicContent.CanPushTail(viewportWorldRect))
         {
             if (!_dynamicViewport.TailMoveNext())
+            {
+                _dynamicContent.SetTailEdge();
                 break;
+            }
 
             _dynamicContent.PushTail(_itemProvider.GetItemByIndex(_dynamicViewport.tailIndex));
         }

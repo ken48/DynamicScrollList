@@ -16,6 +16,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     Vector2 _position;
     Vector2 _lastDelta;
     bool _isDragging;
+    float _elasticityCoef;
 
     public void OnBeginDrag(PointerEventData eventData)
     {
@@ -25,6 +26,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             _isDragging = true;
             _velocity = Vector2.zero;
             _lastDelta = Vector2.zero;
+            _elasticityCoef = 1f;
         }
     }
 
@@ -41,7 +43,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         if (localDelta.sqrMagnitude > _velocity.sqrMagnitude)
             _lastDelta = localDelta;
 
-        OnScroll(localDelta);
+        OnScroll(localDelta * _elasticityCoef);
 
         _prevPos = localPos;
     }
@@ -51,6 +53,16 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         _velocity = _lastDelta;
 
         _isDragging = false;
+    }
+
+    public void SetEdgesDelta(float edgesDelta)
+    {
+        Vector2 mask = _axis == RectTransform.Axis.Horizontal ? Vector2.right : Vector2.up;
+
+        if (!_isDragging)
+            _velocity = mask * edgesDelta;
+        else
+            _elasticityCoef = 1f - Mathf.Clamp01(Mathf.Abs(edgesDelta) / _viewport.rect.height);
     }
 
     void LateUpdate()
