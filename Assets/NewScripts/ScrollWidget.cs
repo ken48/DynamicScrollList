@@ -43,7 +43,9 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         if (localDelta.sqrMagnitude > _velocity.sqrMagnitude)
             _lastDelta = localDelta;
 
-        OnScroll(localDelta * _elasticityCoef);
+        if (_elasticityCoef < 1f)
+            localDelta *= _elasticityCoef * 0.7f;
+        OnScroll(localDelta);
 
         _prevPos = localPos;
     }
