@@ -10,12 +10,10 @@ public class DynamicScrollContent : IDisposable
     RectTransform _viewport;
     RectTransform _node;
     float _spacing;
-
-    // Todo: fix this caches
     float _lastHeadPosition;
     float _lastTailPosition;
-//    bool _headEdge;
-//    bool _tailEdge;
+    bool _headEdge;
+    bool _tailEdge;
 
     public DynamicScrollContent(IDynamicScrollItemWidgetProvider itemWidgetProvider, RectTransform viewport, RectTransform node, float spacing)
     {
@@ -52,52 +50,56 @@ public class DynamicScrollContent : IDisposable
 
     public void PushHead(IDynamicScrollItem item)
     {
-        float lastHeadPosition = IsEmpty() ? _lastHeadPosition :
-            _widgets[GetHeadIndex()].rectTransform.anchoredPosition.y;
         AddWidget(item, GetHeadIndex());
 
         IDynamicScrollItemWidget newHeadWidget = _widgets[GetHeadIndex()];
-        lastHeadPosition += _spacing + newHeadWidget.rectTransform.rect.height;
-        newHeadWidget.rectTransform.anchoredPosition = Vector2.up * lastHeadPosition;
+        _lastHeadPosition += _spacing + newHeadWidget.rectTransform.rect.height;
+        newHeadWidget.rectTransform.anchoredPosition = Vector2.up * _lastHeadPosition;
 
-        // _headEdge = false;
+        _headEdge = false;
     }
 
     public void PushTail(IDynamicScrollItem item)
     {
-        float lastTailPosition = IsEmpty() ? _lastTailPosition :
-            _widgets[GetTailIndex()].rectTransform.anchoredPosition.y - _widgets[GetTailIndex()].rectTransform.rect.height;
         AddWidget(item, GetTailIndex() + 1);
 
         IDynamicScrollItemWidget newTailWidget = _widgets[GetTailIndex()];
-        lastTailPosition -= _spacing;
-        newTailWidget.rectTransform.anchoredPosition = Vector2.up * lastTailPosition;
+        _lastTailPosition -= _spacing;
+        newTailWidget.rectTransform.anchoredPosition = Vector2.up * _lastTailPosition;
+        _lastTailPosition -= newTailWidget.rectTransform.rect.height;
 
-        // _tailEdge = false;
+        _tailEdge = false;
     }
 
     public void PopHead()
     {
-        RemoveWidget(GetHeadIndex());
+        int headIndex = GetHeadIndex();
+        _lastHeadPosition -= _widgets[headIndex].rectTransform.rect.height + _spacing;
 
-        // _headEdge = false;
+        RemoveWidget(headIndex);
+
+        _headEdge = false;
     }
 
     public void PopTail()
     {
-        RemoveWidget(GetTailIndex());
+        int tailIndex = GetTailIndex();
+        RectTransform tailWidgetRectTransform = _widgets[tailIndex].rectTransform;
+        _lastTailPosition += tailWidgetRectTransform.rect.height + _spacing;
 
-        // _tailEdge = false;
+        RemoveWidget(tailIndex);
+
+        _tailEdge = false;
     }
 
     public void SetHeadEdge()
     {
-        // _headEdge = true;
+        _headEdge = true;
     }
 
     public void SetTailEdge()
     {
-        // _tailEdge = true;
+        _tailEdge = true;
     }
 
     public bool CanPushHead(Rect viewportWorldRect)
@@ -110,7 +112,7 @@ public class DynamicScrollContent : IDisposable
         }
         else
         {
-            startPos = _node.TransformPoint(Vector2.zero).y;
+            startPos = _node.TransformPoint(Vector2.up * _lastHeadPosition).y;
         }
 
         return viewportWorldRect.yMax > startPos;
@@ -127,9 +129,7 @@ public class DynamicScrollContent : IDisposable
         else
         {
             // Todo: bug
-            startPos = _node.TransformPoint(Vector2.up * (_lastTailPosition)).y;
-
-            Debug.Log(startPos + " " + viewportWorldRect.yMin);
+            startPos = _node.TransformPoint(Vector2.up * _lastTailPosition).y;
         }
 
         return viewportWorldRect.yMin < startPos;
@@ -155,13 +155,6 @@ public class DynamicScrollContent : IDisposable
 
     void RemoveWidget(int index)
     {
-        if (_widgets.Count == 1)
-        {
-            Vector2 lastWidgetAnchoredPosition = _widgets[0].rectTransform.anchoredPosition;
-            _lastHeadPosition = lastWidgetAnchoredPosition.y - _widgets[0].rectTransform.rect.height - _spacing;
-            _lastTailPosition = lastWidgetAnchoredPosition.y + _spacing;
-        }
-
         _itemWidgetsPool.ReturnWidget(_widgets[index]);
         _widgets.RemoveAt(index);
     }
