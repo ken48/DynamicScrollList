@@ -72,14 +72,15 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         const float minSpeedSqr = 0.001f;
         const float speedCoef = 25f;
         const float maxMagnitude = 110f; // Todo: dependency from canvas resolution
-        const float inertiaCoef = 0.94f;
+        const float inertiaCoef = 5.5f;
 
         if (_velocity.sqrMagnitude < minSpeedSqr)
             return;
 
+        float dt = Time.unscaledDeltaTime;
         Vector2 delta = _velocity * speedCoef * Time.unscaledDeltaTime;
         delta = Vector2.ClampMagnitude(delta, maxMagnitude);
-        _velocity *= inertiaCoef;
+        _velocity *= 1f - Mathf.Clamp01(dt * inertiaCoef);
 
         OnScroll(delta);
     }

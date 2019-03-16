@@ -1,6 +1,8 @@
 ﻿using System;
 using UnityEngine;
 
+// Todo: demo chat application
+
 public class Demo : MonoBehaviour
 {
     [SerializeField]

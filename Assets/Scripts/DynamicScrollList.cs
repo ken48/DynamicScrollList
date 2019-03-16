@@ -1,5 +1,11 @@
 ﻿using UnityEngine;
 
+// Todo: fix warnings, Todos, review other
+// Todo: low fps inertia bug: too high speed on content returning + moving beyond the edge on returning
+// Todo: adding, deleting, changing of element
+// Todo: items array enlarging on fly
+// Todo: navigation to some data index
+
 public class DynamicScrollList : MonoBehaviour
 {
     [SerializeField]
