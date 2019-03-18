@@ -35,25 +35,33 @@ public class DynamicScrollContent : IDisposable
 
     public void Move(float delta)
     {
-        _node.anchoredPosition = _node.anchoredPosition + Vector2.up * delta;
+        _node.anchoredPosition += Vector2.up * delta;
     }
 
-    public float CheckEdges()
+    public bool CheckEdges(out float delta)
     {
+        delta = 0f;
+
         if (_headEdge)
         {
             float headEdgePosition = -_lastHeadPosition;
             if (_node.anchoredPosition.y < headEdgePosition)
-                return (Vector2.up * headEdgePosition - _node.anchoredPosition).y;
+            {
+                delta = (Vector2.up * headEdgePosition - _node.anchoredPosition).y;
+                return false;
+            }
         }
         else if (_tailEdge)
         {
             float bottomEdgePosition = -_lastTailPosition - _viewport.rect.height;
             if (_node.anchoredPosition.y > bottomEdgePosition)
-                return (Vector2.up * bottomEdgePosition - _node.anchoredPosition).y;
+            {
+                delta = (Vector2.up * bottomEdgePosition - _node.anchoredPosition).y;
+                return false;
+            }
         }
 
-        return 0f;
+        return true;
     }
 
     public void PushHead(IDynamicScrollItem item)

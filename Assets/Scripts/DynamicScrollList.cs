@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 
-// Todo: fix warnings, Todos, review other
-// Todo: low fps inertia bug: too high speed on content returning + moving beyond the edge on returning
+// Todo: low fps inertia: too high speed on content returning + moving beyond the edge on returning
+// Todo: crash on destroy
+// Todo: Todos, review other
+// Todo: common logic for horizontal & vertical scroll
 // Todo: adding, deleting, changing of element
 // Todo: items array enlarging on fly
 // Todo: navigation to some data index
@@ -62,8 +64,9 @@ public class DynamicScrollList : MonoBehaviour
             TryPushHead(viewportWorldRect);
         }
 
-        float edgesDelta = _dynamicContent.CheckEdges();
-        if (edgesDelta != 0f)
+        // Тут проблема в том, что сначала делаем Move на этом кадре (смещая весь контент, возможно, очень сильно).
+        // А уже потом проверяем края и включаем инерцию.
+        if (!_dynamicContent.CheckEdges(out float edgesDelta))
             _scrollWidget.SetEdgesDelta(edgesDelta);
     }
 
