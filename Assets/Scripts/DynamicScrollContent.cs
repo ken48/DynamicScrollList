@@ -40,6 +40,8 @@ public class DynamicScrollContent : IDisposable
 
     public bool CheckEdges(out float delta)
     {
+        Debug.Log(_headEdge + " " + _tailEdge);
+
         delta = 0f;
 
         if (_headEdge)
@@ -71,6 +73,8 @@ public class DynamicScrollContent : IDisposable
         IDynamicScrollItemWidget newHeadWidget = _widgets[GetHeadIndex()];
         _lastHeadPosition += _spacing + newHeadWidget.rectTransform.rect.height;
         newHeadWidget.rectTransform.anchoredPosition = Vector2.up * _lastHeadPosition;
+
+        _headEdge = false;
     }
 
     public void PushTail(IDynamicScrollItem item)
@@ -81,6 +85,8 @@ public class DynamicScrollContent : IDisposable
         _lastTailPosition -= _spacing;
         newTailWidget.rectTransform.anchoredPosition = Vector2.up * _lastTailPosition;
         _lastTailPosition -= newTailWidget.rectTransform.rect.height;
+
+        _tailEdge = false;
     }
 
     public void PopHead()
