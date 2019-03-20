@@ -64,8 +64,6 @@ public class DynamicScrollList : MonoBehaviour
             TryPushHead(viewportWorldRect);
         }
 
-        // Тут проблема в том, что сначала делаем Move на этом кадре (смещая весь контент, возможно, очень сильно).
-        // А уже потом проверяем края и включаем инерцию.
         if (!_dynamicContent.CheckEdges(out float edgesDelta))
             _scrollWidget.SetEdgesDelta(edgesDelta);
     }

@@ -24,9 +24,6 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         {
             _isDragging = true;
             _velocity = Vector2.zero;
-
-            Debug.Log(Time.frameCount + " BDzero");
-
             // _elasticityCoef = 1f;
         }
     }
@@ -44,9 +41,8 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
         // if (_elasticityCoef < 1f)
         //     localDelta *= _elasticityCoef * 0.01f;
-        OnScroll(delta);
 
-        Debug.Log(Time.frameCount + " KUKU " + delta.y);
+        OnScroll(delta);
 
         _lastDelta = delta;
         _startPosition = finishPosition;
@@ -54,32 +50,23 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        Debug.Log(Time.frameCount + " ED " + _lastDelta.y);
-
-        _velocity = _lastDelta;
+        if (_velocity.sqrMagnitude <= 0f)
+            _velocity = _lastDelta;
         _isDragging = false;
     }
 
     public void SetEdgesDelta(float edgesDelta)
     {
-        if (_isDragging)
-        {
+        // if (_isDragging)
             // _elasticityCoef = 1f - Mathf.Clamp01(Mathf.Abs(edgesDelta) / _viewport.rect.height);
-            //
-            // Debug.Log(_elasticityCoef);
-        }
-        else
-        {
-            Vector2 mask = _axis == RectTransform.Axis.Horizontal ? Vector2.right : Vector2.up;
-            _velocity = mask * edgesDelta;
 
-            Debug.Log(Time.frameCount + " EDGE " + _velocity.y);
-        }
+        Vector2 mask = _axis == RectTransform.Axis.Horizontal ? Vector2.right : Vector2.up;
+        _velocity = mask * edgesDelta;
     }
 
     void LateUpdate()
     {
-        if (_velocity.sqrMagnitude <= 0f)
+        if (_isDragging || _velocity.sqrMagnitude <= 0f)
             return;
 
         // Todo: max speed restriction

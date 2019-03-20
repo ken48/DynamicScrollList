@@ -40,8 +40,6 @@ public class DynamicScrollContent : IDisposable
 
     public bool CheckEdges(out float delta)
     {
-        Debug.Log(_headEdge + " " + _tailEdge);
-
         delta = 0f;
 
         if (_headEdge)
