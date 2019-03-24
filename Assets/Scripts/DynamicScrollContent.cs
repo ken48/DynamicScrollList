@@ -24,7 +24,7 @@ public class DynamicScrollContent : IDisposable
         _widgets = new List<IDynamicScrollItemWidget>();
 
         _lastHeadPosition = 0f;
-        _lastTailPosition = _spacing; // Shift first element to top
+        _lastTailPosition = _spacing;
         _headEdge = _tailEdge = true;
     }
 
@@ -38,30 +38,22 @@ public class DynamicScrollContent : IDisposable
         _node.anchoredPosition += Vector2.up * delta;
     }
 
-    public bool CheckEdges(out float delta)
+    public float CheckEdges()
     {
-        delta = 0f;
-
         if (_headEdge)
         {
             float headEdgePosition = -_lastHeadPosition;
             if (_node.anchoredPosition.y < headEdgePosition)
-            {
-                delta = (Vector2.up * headEdgePosition - _node.anchoredPosition).y;
-                return false;
-            }
+                return (Vector2.up * headEdgePosition - _node.anchoredPosition).y;
         }
         else if (_tailEdge)
         {
             float bottomEdgePosition = -_lastTailPosition - _viewport.rect.height;
             if (_node.anchoredPosition.y > bottomEdgePosition)
-            {
-                delta = (Vector2.up * bottomEdgePosition - _node.anchoredPosition).y;
-                return false;
-            }
+                return(Vector2.up * bottomEdgePosition - _node.anchoredPosition).y;
         }
 
-        return true;
+        return 0f;
     }
 
     public void PushHead(IDynamicScrollItem item)

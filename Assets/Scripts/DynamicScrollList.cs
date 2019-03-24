@@ -2,7 +2,7 @@
 
 // Todo: low fps inertia: too high speed on content returning + moving beyond the edge on returning
 // Todo: crash on destroy
-// Todo: Todos, review other
+// Todo: todos, review all architecture
 // Todo: common logic for horizontal & vertical scroll
 // Todo: adding, deleting, changing of element
 // Todo: items array enlarging on fly
@@ -64,8 +64,7 @@ public class DynamicScrollList : MonoBehaviour
             TryPushHead(viewportWorldRect);
         }
 
-        if (!_dynamicContent.CheckEdges(out float edgesDelta))
-            _scrollWidget.SetEdgesDelta(edgesDelta);
+        _scrollWidget.SetEdgesDelta(_dynamicContent.CheckEdges());
     }
 
     void TryPushHead(Rect viewportWorldRect)

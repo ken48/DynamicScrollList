@@ -65,8 +65,6 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     void LateUpdate()
     {
-        // Todo: strange bug with inifinite scrolling (maybe _edgesDelta stays const)
-
         if (_isDragging || (!CheckVectorMagnitude(_inertiaVelocity) && !CheckVectorMagnitude(_edgesDelta)))
             return;
 

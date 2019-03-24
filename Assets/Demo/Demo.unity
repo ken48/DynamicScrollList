@@ -293,7 +293,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _scrollList: {fileID: 1881900230}
-  _fpsCoef: 0.181
+  _fpsCoef: 1
   _itemsCount: 100
 --- !u!20 &1763818151
 Camera:
