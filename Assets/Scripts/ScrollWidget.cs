@@ -73,6 +73,9 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     void LateUpdate()
     {
+        // Todo: застревает на низких фпс контент, если резко крутнуть за пределы вьюпорта
+        // (при этом эджес и инерциа велосити == 0)
+
         if (_isDragging || (!CheckVectorMagnitude(_inertiaVelocity) && !CheckVectorMagnitude(_edgesDelta)))
             return;
 
