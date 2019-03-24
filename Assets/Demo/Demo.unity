@@ -260,7 +260,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -100, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!1 &1763818149
 GameObject:
@@ -293,8 +293,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _scrollList: {fileID: 1881900230}
-  _fpsCoef: 1
-  _itemsCount: 100
+  _fpsCoef: 0.5
+  _itemsCount: 8
 --- !u!20 &1763818151
 Camera:
   m_ObjectHideFlags: 0
@@ -405,6 +405,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _axis: 1
   _viewport: {fileID: 60072009}
+  _speedCoef: 12
+  _inertiaCoef: 3.5
+  _elasticityCoef: 0.5
 --- !u!114 &1881900228
 MonoBehaviour:
   m_ObjectHideFlags: 0
