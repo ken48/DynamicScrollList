@@ -10,6 +10,12 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     RectTransform.Axis _axis;
     [SerializeField]
     RectTransform _viewport;
+    [SerializeField]
+    float _speedCoef = 12f;
+    [SerializeField]
+    float _inertiaCoef = 3.5f;
+    [SerializeField]
+    float _elasticityCoef = 0.5f;
 
     Vector2 _startPosition;
     Vector2 _finishPosition;
@@ -60,7 +66,9 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             _elasticity = 1f - Mathf.Clamp01(Mathf.Abs(edgesDelta) / _viewport.rect.height);
 
         Vector2 mask = _axis == RectTransform.Axis.Horizontal ? Vector2.right : Vector2.up;
-        _edgesDelta = mask * edgesDelta;
+        _edgesDelta = mask * edgesDelta * _elasticityCoef;
+        if (!Mathf.Approximately(edgesDelta, 0f))
+            _inertiaVelocity = Vector2.zero;
     }
 
     void LateUpdate()
@@ -68,14 +76,10 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         if (_isDragging || (!CheckVectorMagnitude(_inertiaVelocity) && !CheckVectorMagnitude(_edgesDelta)))
             return;
 
-        // Todo: max speed restriction
-        const float speedCoef = 13f;
-        const float inertiaCoef = 5f;
-
         float dt = Time.unscaledDeltaTime;
         Vector2 totalVelocity = _inertiaVelocity + _edgesDelta;
-        Vector2 delta = totalVelocity * speedCoef * dt;
-        _inertiaVelocity *= 1f - Mathf.Clamp01(dt * inertiaCoef);
+        Vector2 delta = totalVelocity * _speedCoef * dt;
+        _inertiaVelocity *= 1f - Mathf.Clamp01(dt * _inertiaCoef);
 
         OnScroll(delta);
     }
@@ -98,7 +102,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         _startPosition = finishPosition;
 
         if (_elasticity < 1f)
-            delta *= _elasticity * 0.5f;
+            delta *= _elasticity * _elasticityCoef;
         return delta;
     }
 
