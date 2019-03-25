@@ -50,7 +50,7 @@ public class DynamicScrollContent : IDisposable
         {
             float bottomEdgePosition = -_lastTailPosition - _viewport.rect.height;
             if (_node.anchoredPosition.y > bottomEdgePosition)
-                return(Vector2.up * bottomEdgePosition - _node.anchoredPosition).y;
+                return (Vector2.up * bottomEdgePosition - _node.anchoredPosition).y;
         }
 
         return 0f;

@@ -34,7 +34,8 @@ public class DynamicScrollList : MonoBehaviour
         _dynamicViewport = new DynamicScrollViewport(i => _itemProvider.GetItemByIndex(i) != null);
         _dynamicContent = new DynamicScrollContent(itemWidgetProvider, _viewportNode, _contentNode, _spacing);
 
-        OnScroll(0f);
+        // Todo: initial refresh
+        OnScroll(0.00001f);
     }
 
     public void Shutdown()
@@ -52,13 +53,12 @@ public class DynamicScrollList : MonoBehaviour
         _dynamicContent.Move(delta);
 
         Rect viewportWorldRect = RectHelpers.GetWorldRect(_viewportNode);
-        if (delta >= 0f)
+        if (delta > 0f)
         {
             TryPopHead(viewportWorldRect);
             TryPushTail(viewportWorldRect);
-
         }
-        else
+        else if (delta < 0f)
         {
             TryPopTail(viewportWorldRect);
             TryPushHead(viewportWorldRect);
