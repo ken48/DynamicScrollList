@@ -65,6 +65,11 @@ public class DynamicScrollList : MonoBehaviour
         }
 
         _scrollWidget.SetEdgesDelta(_dynamicContent.CheckEdges());
+
+        // Todo: проблема в том, что при резком скролле за пределы вьюпорта добавляем элементы
+        // и не проверяем, нужны ли они (ведь они могут создавать уже за пределами).
+        // Другая проблема - снятие _...Edge. В какой-то момент один из этих флагов снимается и CheckEdges возвращает 0.
+        // И контент зависает.
     }
 
     void TryPushHead(Rect viewportWorldRect)
