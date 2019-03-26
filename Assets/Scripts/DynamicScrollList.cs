@@ -52,6 +52,8 @@ public class DynamicScrollList : MonoBehaviour
     {
         _dynamicContent.Move(delta);
 
+        Debug.Log($"{Time.frameCount} + {_dynamicViewport.headIndex} {_dynamicViewport.headEdge} {_dynamicViewport.tailIndex} {_dynamicViewport.tailEdge}");
+
         Rect viewportWorldRect = RectHelpers.GetWorldRect(_viewportNode);
         if (delta > 0f)
         {
@@ -64,40 +66,35 @@ public class DynamicScrollList : MonoBehaviour
             TryPushHead(viewportWorldRect);
         }
 
-        float edgesDelta = _dynamicContent.CheckEdges();
-        _scrollWidget.SetEdgesDelta(edgesDelta);
-        if (edgesDelta > 0f)
+        Debug.Log($"{Time.frameCount} ++ {_dynamicViewport.headIndex} {_dynamicViewport.headEdge} {_dynamicViewport.tailIndex} {_dynamicViewport.tailEdge}");
+
+        float edgeDelta = 0f;
+        if (_dynamicViewport.headEdge)
+        {
+            edgeDelta = _dynamicContent.CheckHeadEdge();
             TryPopTail(viewportWorldRect);
-        else if (edgesDelta < 0f)
+        }
+        else if (_dynamicViewport.tailEdge)
+        {
+            edgeDelta = _dynamicContent.CheckTailEdge();
             TryPopHead(viewportWorldRect);
+        }
+
+        _scrollWidget.SetEdgeDelta(edgeDelta);
     }
 
     void TryPushHead(Rect viewportWorldRect)
     {
-        while (_dynamicContent.CanPushHead(viewportWorldRect))
-        {
-            if (!_dynamicViewport.HeadMovePrevious())
-            {
-                _dynamicContent.SetHeadEdge();
-                break;
-            }
-
+        // Todo: pop tail on each push
+        while (_dynamicContent.CanPushHead(viewportWorldRect) && _dynamicViewport.HeadMovePrevious())
             _dynamicContent.PushHead(_itemProvider.GetItemByIndex(_dynamicViewport.headIndex));
-        }
     }
 
     void TryPushTail(Rect viewportWorldRect)
     {
-        while (_dynamicContent.CanPushTail(viewportWorldRect))
-        {
-            if (!_dynamicViewport.TailMoveNext())
-            {
-                _dynamicContent.SetTailEdge();
-                break;
-            }
-
+        // Todo: pop head on each push
+        while (_dynamicContent.CanPushTail(viewportWorldRect) && _dynamicViewport.TailMoveNext())
             _dynamicContent.PushTail(_itemProvider.GetItemByIndex(_dynamicViewport.tailIndex));
-        }
     }
 
     void TryPopHead(Rect viewportWorldRect)

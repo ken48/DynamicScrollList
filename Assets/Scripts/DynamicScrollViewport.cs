@@ -1,9 +1,12 @@
 ﻿using System;
+using UnityEngine;
 
 public class DynamicScrollViewport
 {
     public int headIndex => _headIndex;
     public int tailIndex => _tailIndex;
+    public bool headEdge => !_onCheckItem(_headIndex - 1);
+    public bool tailEdge => !_onCheckItem(_tailIndex + 1);
 
     readonly Func<int, bool> _onCheckItem;
     int _headIndex;
@@ -27,6 +30,8 @@ public class DynamicScrollViewport
         _headIndex = newHeadIndex;
         CheckIndices();
 
+        Debug.Log($"{Time.frameCount} HP {_headIndex}");
+
         return true;
     }
 
@@ -42,6 +47,8 @@ public class DynamicScrollViewport
         _tailIndex = newTailIndex;
         CheckIndices();
 
+        Debug.Log($"{Time.frameCount} TN {_tailIndex}");
+
         return true;
     }
 
@@ -53,6 +60,8 @@ public class DynamicScrollViewport
         _headIndex++;
         CheckIndices();
 
+        Debug.Log($"{Time.frameCount} HN {_headIndex}");
+
         return true;
     }
 
@@ -63,6 +72,8 @@ public class DynamicScrollViewport
 
         _tailIndex--;
         CheckIndices();
+
+        Debug.Log($"{Time.frameCount} TP {_headIndex}");
 
         return true;
     }

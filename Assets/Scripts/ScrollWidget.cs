@@ -22,7 +22,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     Vector2 _lastDelta;
     bool _isDragging;
     Vector2 _inertiaVelocity;
-    Vector2 _edgesDelta;
+    Vector2 _edgeDelta;
     float _elasticity;
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -32,7 +32,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         {
             _isDragging = true;
             _inertiaVelocity = Vector2.zero;
-            _edgesDelta = Vector2.zero;
+            _edgeDelta = Vector2.zero;
             _elasticity = 1f;
         }
     }
@@ -60,27 +60,24 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         OnScroll(delta);
     }
 
-    public void SetEdgesDelta(float edgesDelta)
+    public void SetEdgeDelta(float edgesDelta)
     {
         if (_isDragging)
             _elasticity = 1f - Mathf.Clamp01(Mathf.Abs(edgesDelta) / _viewport.rect.height);
 
         Vector2 mask = _axis == RectTransform.Axis.Horizontal ? Vector2.right : Vector2.up;
-        _edgesDelta = mask * edgesDelta * _elasticityCoef;
+        _edgeDelta = mask * edgesDelta * _elasticityCoef;
         if (!Mathf.Approximately(edgesDelta, 0f))
             _inertiaVelocity = Vector2.zero;
     }
 
     void LateUpdate()
     {
-        // Todo: застревает на низких фпс контент, если резко крутнуть за пределы вьюпорта
-        // (при этом эджес и инерциа велосити == 0)
-
-        if (_isDragging || (!CheckVectorMagnitude(_inertiaVelocity) && !CheckVectorMagnitude(_edgesDelta)))
+        if (_isDragging || (!CheckVectorMagnitude(_inertiaVelocity) && !CheckVectorMagnitude(_edgeDelta)))
             return;
 
         float dt = Time.unscaledDeltaTime;
-        Vector2 totalVelocity = _inertiaVelocity + _edgesDelta;
+        Vector2 totalVelocity = _inertiaVelocity + _edgeDelta;
         Vector2 delta = totalVelocity * _speedCoef * dt;
         _inertiaVelocity *= 1f - Mathf.Clamp01(dt * _inertiaCoef);
 
