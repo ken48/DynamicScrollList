@@ -50,20 +50,37 @@ public class DynamicScrollList : MonoBehaviour
 
     void OnScroll(float delta)
     {
+        // Move content
         _dynamicContent.Move(delta);
 
+        // Refresh viewport and widgets
         Rect viewportWorldRect = RectHelpers.GetWorldRect(_viewportNode);
         if (delta > 0f)
         {
-            TryPopHead(viewportWorldRect);
-            TryPushTail(viewportWorldRect);
+            // Try move forward from head
+            while (TryHeadMoveForward(viewportWorldRect));
+
+            // Try move forward from tail
+            while (_dynamicContent.CanPushTail(viewportWorldRect) && _dynamicViewport.TailMoveForward())
+            {
+                _dynamicContent.PushTail(_itemProvider.GetItemByIndex(_dynamicViewport.tailIndex));
+                TryHeadMoveForward(viewportWorldRect);
+            }
         }
         else if (delta < 0f)
         {
-            TryPopTail(viewportWorldRect);
-            TryPushHead(viewportWorldRect);
+            // Try move back from tail
+            while (TryTailMoveBack(viewportWorldRect));
+
+            // Try move back from head
+            while (_dynamicContent.CanPushHead(viewportWorldRect) && _dynamicViewport.HeadMoveBack())
+            {
+                _dynamicContent.PushHead(_itemProvider.GetItemByIndex(_dynamicViewport.headIndex));
+                TryTailMoveBack(viewportWorldRect);
+            }
         }
 
+        // Check edges
         float edgeDelta = 0f;
         if (_dynamicViewport.headEdge)
             edgeDelta = _dynamicContent.CheckHeadEdge();
@@ -72,41 +89,21 @@ public class DynamicScrollList : MonoBehaviour
         _scrollWidget.SetEdgeDelta(edgeDelta);
     }
 
-    void TryPushHead(Rect viewportWorldRect)
+    bool TryHeadMoveForward(Rect viewportWorldRect)
     {
-        while (_dynamicContent.CanPushHead(viewportWorldRect) && _dynamicViewport.HeadMovePrevious())
-        {
-            _dynamicContent.PushHead(_itemProvider.GetItemByIndex(_dynamicViewport.headIndex));
-            TryPopTail(viewportWorldRect);
-        }
+        if (!_dynamicContent.CanPopHead(viewportWorldRect))
+            return false;
+
+        _dynamicContent.PopHead();
+        return _dynamicViewport.HeadMoveForward();
     }
 
-    void TryPushTail(Rect viewportWorldRect)
+    bool TryTailMoveBack(Rect viewportWorldRect)
     {
-        while (_dynamicContent.CanPushTail(viewportWorldRect) && _dynamicViewport.TailMoveNext())
-        {
-            _dynamicContent.PushTail(_itemProvider.GetItemByIndex(_dynamicViewport.tailIndex));
-            TryPopHead(viewportWorldRect);
-        }
-    }
+        if (!_dynamicContent.CanPopTail(viewportWorldRect))
+            return false;
 
-    void TryPopHead(Rect viewportWorldRect)
-    {
-        while (_dynamicContent.CanPopHead(viewportWorldRect))
-        {
-            _dynamicContent.PopHead();
-            if (!_dynamicViewport.HeadMoveNext())
-                break;
-        }
-    }
-
-    void TryPopTail(Rect viewportWorldRect)
-    {
-        while (_dynamicContent.CanPopTail(viewportWorldRect))
-        {
-            _dynamicContent.PopTail();
-            if (!_dynamicViewport.TailMovePrevious())
-                break;
-        }
+        _dynamicContent.PopTail();
+        return _dynamicViewport.TailMoveBack();
     }
 }

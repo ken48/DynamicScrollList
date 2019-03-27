@@ -19,7 +19,7 @@ public class DynamicScrollViewport
         _tailIndex = -1;
     }
 
-    public bool HeadMovePrevious()
+    public bool HeadMoveBack()
     {
         int newHeadIndex = _headIndex - 1;
         if (!_onCheckItem(newHeadIndex))
@@ -32,7 +32,7 @@ public class DynamicScrollViewport
         return true;
     }
 
-    public bool TailMoveNext()
+    public bool TailMoveForward()
     {
         int newTailIndex = _tailIndex + 1;
         if (!_onCheckItem(newTailIndex))
@@ -46,7 +46,7 @@ public class DynamicScrollViewport
         return true;
     }
 
-    public bool HeadMoveNext()
+    public bool HeadMoveForward()
     {
         if (IsEmpty())
             return false;
@@ -56,7 +56,7 @@ public class DynamicScrollViewport
         return true;
     }
 
-    public bool TailMovePrevious()
+    public bool TailMoveBack()
     {
         if (IsEmpty())
             return false;
