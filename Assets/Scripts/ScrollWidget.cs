@@ -18,7 +18,6 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     float _elasticityCoef = 0.5f;
 
     Vector2 _startPosition;
-    Vector2 _finishPosition;
     Vector2 _lastDelta;
     bool _isDragging;
     Vector2 _inertiaVelocity;
@@ -90,7 +89,6 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             return;
 
         onScroll?.Invoke(_axis == RectTransform.Axis.Horizontal ? delta.x : delta.y);
-        _finishPosition += delta;
     }
 
     Vector2 GetDeltaPosition(PointerEventData eventData)
