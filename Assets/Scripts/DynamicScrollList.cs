@@ -52,8 +52,6 @@ public class DynamicScrollList : MonoBehaviour
     {
         _dynamicContent.Move(delta);
 
-        Debug.Log($"{Time.frameCount} + {_dynamicViewport.headIndex} {_dynamicViewport.headEdge} {_dynamicViewport.tailIndex} {_dynamicViewport.tailEdge}");
-
         Rect viewportWorldRect = RectHelpers.GetWorldRect(_viewportNode);
         if (delta > 0f)
         {
@@ -66,35 +64,30 @@ public class DynamicScrollList : MonoBehaviour
             TryPushHead(viewportWorldRect);
         }
 
-        Debug.Log($"{Time.frameCount} ++ {_dynamicViewport.headIndex} {_dynamicViewport.headEdge} {_dynamicViewport.tailIndex} {_dynamicViewport.tailEdge}");
-
         float edgeDelta = 0f;
         if (_dynamicViewport.headEdge)
-        {
             edgeDelta = _dynamicContent.CheckHeadEdge();
-            TryPopTail(viewportWorldRect);
-        }
         else if (_dynamicViewport.tailEdge)
-        {
             edgeDelta = _dynamicContent.CheckTailEdge();
-            TryPopHead(viewportWorldRect);
-        }
-
         _scrollWidget.SetEdgeDelta(edgeDelta);
     }
 
     void TryPushHead(Rect viewportWorldRect)
     {
-        // Todo: pop tail on each push
         while (_dynamicContent.CanPushHead(viewportWorldRect) && _dynamicViewport.HeadMovePrevious())
+        {
             _dynamicContent.PushHead(_itemProvider.GetItemByIndex(_dynamicViewport.headIndex));
+            TryPopTail(viewportWorldRect);
+        }
     }
 
     void TryPushTail(Rect viewportWorldRect)
     {
-        // Todo: pop head on each push
         while (_dynamicContent.CanPushTail(viewportWorldRect) && _dynamicViewport.TailMoveNext())
+        {
             _dynamicContent.PushTail(_itemProvider.GetItemByIndex(_dynamicViewport.tailIndex));
+            TryPopHead(viewportWorldRect);
+        }
     }
 
     void TryPopHead(Rect viewportWorldRect)

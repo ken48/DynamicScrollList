@@ -93,7 +93,7 @@ public class DynamicScrollContent : IDisposable
         }
         else
         {
-            startPos = _node.TransformPoint(Vector2.up * _lastHeadPosition).y;
+            startPos = _node.TransformPoint(Vector2.up * _lastHeadPosition + Vector2.up * _spacing).y;
         }
 
         return viewportWorldRect.yMax > startPos;
@@ -109,7 +109,7 @@ public class DynamicScrollContent : IDisposable
         }
         else
         {
-            startPos = _node.TransformPoint(Vector2.up * _lastTailPosition).y;
+            startPos = _node.TransformPoint(Vector2.up * _lastTailPosition + Vector2.down * _spacing).y;
         }
 
         return viewportWorldRect.yMin < startPos;

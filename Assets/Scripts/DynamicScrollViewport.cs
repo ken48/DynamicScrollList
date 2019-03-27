@@ -29,9 +29,6 @@ public class DynamicScrollViewport
             _tailIndex = newHeadIndex;
         _headIndex = newHeadIndex;
         CheckIndices();
-
-        Debug.Log($"{Time.frameCount} HP {_headIndex}");
-
         return true;
     }
 
@@ -46,9 +43,6 @@ public class DynamicScrollViewport
 
         _tailIndex = newTailIndex;
         CheckIndices();
-
-        Debug.Log($"{Time.frameCount} TN {_tailIndex}");
-
         return true;
     }
 
@@ -59,9 +53,6 @@ public class DynamicScrollViewport
 
         _headIndex++;
         CheckIndices();
-
-        Debug.Log($"{Time.frameCount} HN {_headIndex}");
-
         return true;
     }
 
@@ -72,9 +63,6 @@ public class DynamicScrollViewport
 
         _tailIndex--;
         CheckIndices();
-
-        Debug.Log($"{Time.frameCount} TP {_headIndex}");
-
         return true;
     }
 
