@@ -11,11 +11,11 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     [SerializeField]
     RectTransform _viewport;
     [SerializeField]
-    float _speedCoef = 12f;
+    float _speedCoef;
     [SerializeField]
-    float _inertiaCoef = 3.5f;
+    float _inertiaCoef;
     [SerializeField]
-    float _elasticityCoef = 0.5f;
+    float _elasticityCoef;
 
     Vector2 _startPosition;
     Vector2 _lastDelta;
@@ -23,6 +23,13 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     Vector2 _inertiaVelocity;
     Vector2 _edgeDelta;
     float _elasticity;
+
+    void Reset()
+    {
+        _speedCoef = 13f;
+        _inertiaCoef = 3f;
+        _elasticityCoef = 0.5f;
+    }
 
     public void OnBeginDrag(PointerEventData eventData)
     {

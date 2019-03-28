@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 
-// Todo: low fps inertia: too high speed on content returning + moving beyond the edge on returning
 // Todo: crash on destroy
 // Todo: todos, review all architecture
 // Todo: common logic for horizontal & vertical scroll
@@ -64,6 +63,8 @@ public class DynamicScrollList : MonoBehaviour
             while (_dynamicContent.CanPushTail(viewportWorldRect) && _dynamicViewport.TailMoveForward())
             {
                 _dynamicContent.PushTail(_itemProvider.GetItemByIndex(_dynamicViewport.tailIndex));
+
+                // Remove unnecessary elements if the list was scrolled too much on this frame
                 TryHeadMoveForward(viewportWorldRect);
             }
         }
@@ -76,6 +77,8 @@ public class DynamicScrollList : MonoBehaviour
             while (_dynamicContent.CanPushHead(viewportWorldRect) && _dynamicViewport.HeadMoveBack())
             {
                 _dynamicContent.PushHead(_itemProvider.GetItemByIndex(_dynamicViewport.headIndex));
+
+                // Remove unnecessary elements if the list was scrolled too much on this frame
                 TryTailMoveBack(viewportWorldRect);
             }
         }
