@@ -49,64 +49,53 @@ public class DynamicScrollList : MonoBehaviour
 
     void OnScroll(float delta)
     {
-        // Move content
         _dynamicContent.Move(delta);
 
-        // Refresh viewport and widgets
         Rect viewportWorldRect = RectHelpers.GetWorldRect(_viewportNode);
         if (delta > 0f)
         {
-            // Try move forward from head
-            while (TryHeadMoveForward(viewportWorldRect));
-
-            // Try move forward from tail
-            while (_dynamicContent.CanPushTail(viewportWorldRect) && _dynamicViewport.TailMoveForward())
-            {
-                _dynamicContent.PushTail(_itemProvider.GetItemByIndex(_dynamicViewport.tailIndex));
-
-                // Remove unnecessary elements if the list was scrolled too much on this frame
-                TryHeadMoveForward(viewportWorldRect);
-            }
+            while (TryDeflate(ViewportEdge.Head, viewportWorldRect));
+            while (TryInflate(ViewportEdge.Tail, viewportWorldRect));
         }
         else if (delta < 0f)
         {
-            // Try move back from tail
-            while (TryTailMoveBack(viewportWorldRect));
-
-            // Try move back from head
-            while (_dynamicContent.CanPushHead(viewportWorldRect) && _dynamicViewport.HeadMoveBack())
-            {
-                _dynamicContent.PushHead(_itemProvider.GetItemByIndex(_dynamicViewport.headIndex));
-
-                // Remove unnecessary elements if the list was scrolled too much on this frame
-                TryTailMoveBack(viewportWorldRect);
-            }
+            while (TryDeflate(ViewportEdge.Tail, viewportWorldRect));
+            while (TryInflate(ViewportEdge.Head, viewportWorldRect));
         }
 
-        // Check edges
-        float edgeDelta = 0f;
-        if (_dynamicViewport.headEdge)
-            edgeDelta = _dynamicContent.CheckHeadEdge();
-        else if (_dynamicViewport.tailEdge)
-            edgeDelta = _dynamicContent.CheckTailEdge();
-        _scrollWidget.SetEdgeDelta(edgeDelta);
+        _scrollWidget.SetEdgeDelta(GetEdgeDelta());
     }
 
-    bool TryHeadMoveForward(Rect viewportWorldRect)
+    bool TryInflate(ViewportEdge edge, Rect viewportWorldRect)
     {
-        if (!_dynamicContent.CanPopHead(viewportWorldRect))
+        if (!_dynamicContent.CanInflate(edge, viewportWorldRect) ||
+            !_dynamicViewport.Inflate(edge))
+        {
             return false;
+        }
 
-        _dynamicContent.PopHead();
-        return _dynamicViewport.HeadMoveForward();
+        int index = _dynamicViewport.GetEdgeIndex(edge);
+        _dynamicContent.Inflate(edge, _itemProvider.GetItemByIndex(index));
+
+        // Remove unnecessary elements if the list was scrolled too much on this frame
+        TryDeflate(DynamicScrollViewport.OppositeEdges[edge], viewportWorldRect);
+        return true;
     }
 
-    bool TryTailMoveBack(Rect viewportWorldRect)
+    bool TryDeflate(ViewportEdge edge, Rect viewportWorldRect)
     {
-        if (!_dynamicContent.CanPopTail(viewportWorldRect))
+        if (!_dynamicContent.CanDeflate(edge, viewportWorldRect))
             return false;
 
-        _dynamicContent.PopTail();
-        return _dynamicViewport.TailMoveBack();
+        _dynamicContent.Deflate(edge);
+        return _dynamicViewport.Deflate(edge);
+    }
+
+    float GetEdgeDelta()
+    {
+        foreach (ViewportEdge edge in DynamicScrollViewport.OppositeEdges.Keys)
+            if (_dynamicViewport.CheckEdge(edge))
+                return _dynamicContent.GetEdgeDelta(edge);
+        return 0;
     }
 }

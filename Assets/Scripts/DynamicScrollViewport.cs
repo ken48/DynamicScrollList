@@ -1,79 +1,83 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class DynamicScrollViewport
 {
-    public int headIndex => _headIndex;
-    public int tailIndex => _tailIndex;
-    public bool headEdge => !_onCheckItem(_headIndex - 1);
-    public bool tailEdge => !_onCheckItem(_tailIndex + 1);
+    public static readonly Dictionary<ViewportEdge, ViewportEdge> OppositeEdges = new Dictionary<ViewportEdge, ViewportEdge>
+    {
+        { ViewportEdge.Head, ViewportEdge.Tail },
+        { ViewportEdge.Tail, ViewportEdge.Head },
+    };
+
+    public static readonly Dictionary<ViewportEdge, int> InflationShifts = new Dictionary<ViewportEdge, int>
+    {
+        { ViewportEdge.Head, -1 },
+        { ViewportEdge.Tail, 1 },
+    };
+
+    public static readonly Dictionary<ViewportEdge, int> DeflationShifts = new Dictionary<ViewportEdge, int>
+    {
+        { ViewportEdge.Head, 1 },
+        { ViewportEdge.Tail, -1 },
+    };
 
     readonly Func<int, bool> _onCheckItem;
-    int _headIndex;
-    int _tailIndex;
+    readonly Dictionary<ViewportEdge, int> _indices;
 
     public DynamicScrollViewport(Func<int, bool> onCheckItem)
     {
         _onCheckItem = onCheckItem;
-        _headIndex = 0;
-        _tailIndex = -1;
+        _indices = new Dictionary<ViewportEdge, int>
+        {
+            { ViewportEdge.Head, 0 },
+            { ViewportEdge.Tail, -1 },
+        };
     }
 
-    public bool HeadMoveBack()
+    public bool Inflate(ViewportEdge edge)
     {
-        int newHeadIndex = _headIndex - 1;
-        if (!_onCheckItem(newHeadIndex))
+        int newIndex = _indices[edge] + InflationShifts[edge];
+        if (!_onCheckItem(newIndex))
             return false;
 
+        _indices[edge] = newIndex;
         if (IsEmpty())
-            _tailIndex = newHeadIndex;
-        _headIndex = newHeadIndex;
+            _indices[OppositeEdges[edge]] = newIndex;
         CheckIndices();
         return true;
     }
 
-    public bool TailMoveForward()
+    public bool Deflate(ViewportEdge edge)
     {
-        int newTailIndex = _tailIndex + 1;
-        if (!_onCheckItem(newTailIndex))
+        if (IsEmpty())
             return false;
 
-        if (IsEmpty())
-            _headIndex = newTailIndex;
-
-        _tailIndex = newTailIndex;
+        _indices[edge] += DeflationShifts[edge];
         CheckIndices();
         return true;
     }
 
-    public bool HeadMoveForward()
+    public int GetEdgeIndex(ViewportEdge edge)
     {
-        if (IsEmpty())
-            return false;
-
-        _headIndex++;
-        CheckIndices();
-        return true;
+        return _indices[edge];
     }
 
-    public bool TailMoveBack()
+    public bool CheckEdge(ViewportEdge edge)
     {
-        if (IsEmpty())
-            return false;
-
-        _tailIndex--;
-        CheckIndices();
-        return true;
+        return !_onCheckItem(_indices[edge] + InflationShifts[edge]);
     }
 
     bool IsEmpty()
     {
-        return _headIndex > _tailIndex;
+        return _indices[ViewportEdge.Head] > _indices[ViewportEdge.Tail];
     }
 
     void CheckIndices()
     {
-        if (_headIndex - _tailIndex > 1 || _tailIndex - _headIndex < -1)
-            throw new Exception($"Wrong indices: {_headIndex} {_tailIndex}");
+        int headIndex = _indices[ViewportEdge.Head];
+        int tailIndex = _indices[ViewportEdge.Tail];
+        if (headIndex - tailIndex > 1 || tailIndex - headIndex < -1)
+            throw new Exception($"Wrong indices: {headIndex} {tailIndex}");
     }
 }

@@ -6,7 +6,7 @@ public enum ScrollDirection
     Back,
 }
 
-public enum ScrollViewportEdge
+public enum ViewportEdge
 {
     Head,
     Tail,
