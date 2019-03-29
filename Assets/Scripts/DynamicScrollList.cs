@@ -33,8 +33,8 @@ public class DynamicScrollList : MonoBehaviour
         _dynamicViewport = new DynamicScrollViewport(i => _itemProvider.GetItemByIndex(i) != null);
         _dynamicContent = new DynamicScrollContent(itemWidgetProvider, _viewportNode, _contentNode, _spacing);
 
-        // Todo: initial refresh
-        OnScroll(0.00001f);
+        // Initial refresh
+        OnScroll(Mathf.Epsilon);
     }
 
     public void Shutdown()

@@ -38,7 +38,7 @@ public class DynamicScrollContent : IDisposable
 
     public bool CanInflate(ViewportEdge edge, Rect viewportWorldRect)
     {
-        float sign = Mathf.Sign(DynamicScrollViewport.DeflationShifts[edge]);
+        float sign = -Mathf.Sign(DynamicScrollViewport.InflationShifts[edge]);
 
         float startPos;
         if (!IsEmpty())

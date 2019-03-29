@@ -21,12 +21,6 @@ public class DynamicScrollViewport
         { ViewportEdge.Tail, 1 },
     };
 
-    public static readonly Dictionary<ViewportEdge, int> DeflationShifts = new Dictionary<ViewportEdge, int>
-    {
-        { ViewportEdge.Head, 1 },
-        { ViewportEdge.Tail, -1 },
-    };
-
     readonly Func<int, bool> _onCheckItem;
     readonly Dictionary<ViewportEdge, int> _indices;
 
@@ -58,7 +52,7 @@ public class DynamicScrollViewport
         if (IsEmpty())
             return false;
 
-        _indices[edge] += DeflationShifts[edge];
+        _indices[edge] -= InflationShifts[edge];
         CheckIndices();
         return true;
     }
