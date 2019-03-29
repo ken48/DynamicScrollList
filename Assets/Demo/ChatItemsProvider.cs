@@ -20,7 +20,7 @@ public class ChatItem2 : ChatItem
 }
 
 public class ChatItemsProvider : IDynamicScrollItemProvider
-{    
+{
     ChatItem[] _items;
 
     public ChatItemsProvider(ChatItem[] items)
@@ -48,6 +48,7 @@ public class ChatItemWidgetsProvider : IDynamicScrollItemWidgetProvider
 
     public void ReturnItemWidget(IDynamicScrollItemWidget itemWidget)
     {
-        GameObject.Destroy(itemWidget.go);
+        if (itemWidget != null)
+            GameObject.Destroy(itemWidget.go);
     }
 }

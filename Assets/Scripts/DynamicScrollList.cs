@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 
 // Todo: crash on destroy
-// Todo: todos, review all architecture
 // Todo: common logic for horizontal & vertical scroll
 // Todo: adding, deleting, changing of element
 // Todo: items array enlarging on fly
