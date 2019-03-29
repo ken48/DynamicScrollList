@@ -19,9 +19,9 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     Vector2 _startPosition;
     Vector2 _lastDelta;
-    bool _isDragging;
     Vector2 _inertiaVelocity;
     Vector2 _edgeDelta;
+    bool _isDragging;
     float _elasticity;
 
     void Reset()
@@ -113,6 +113,6 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     static bool CheckVectorMagnitude(Vector2 v)
     {
-        return v.sqrMagnitude >= 0.0001f;
+        return v.sqrMagnitude >= 1e-6;
     }
 }
