@@ -31,7 +31,7 @@ public class DynamicScrollList : MonoBehaviour
         _dynamicContent = new DynamicScrollContent(itemWidgetProvider, _viewportNode, _contentNode, _spacing);
 
         // Initial refresh
-        OnScroll(Mathf.Epsilon);
+        OnScroll(Vector2.zero);
     }
 
     public void Shutdown()
@@ -44,17 +44,20 @@ public class DynamicScrollList : MonoBehaviour
         _scrollWidget.onScroll -= OnScroll;
     }
 
-    void OnScroll(float delta)
+    void OnScroll(Vector2 delta)
     {
         _dynamicContent.Move(delta);
 
         Rect viewportWorldRect = RectHelpers.GetWorldRect(_viewportNode);
-        if (delta > 0f)
+
+        // Select non zero vector component
+        float deltaFloat = delta.x + delta.y;
+        if (deltaFloat >= 0f)
         {
             while (TryDeflate(ViewportEdge.Head, viewportWorldRect));
             while (TryInflate(ViewportEdge.Tail, viewportWorldRect));
         }
-        else if (delta < 0f)
+        else if (deltaFloat < 0f)
         {
             while (TryDeflate(ViewportEdge.Tail, viewportWorldRect));
             while (TryInflate(ViewportEdge.Head, viewportWorldRect));

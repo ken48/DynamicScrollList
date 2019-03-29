@@ -1,13 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    public event Action<float> onScroll;
+    enum Axis
+    {
+        Horizontal,
+        Vertical,
+    }
+
+    static readonly Dictionary<Axis, Vector2> AxisMasks = new Dictionary<Axis, Vector2>
+    {
+        { Axis.Horizontal, Vector2.right },
+        { Axis.Vertical, Vector2.up },
+    };
+
+    public event Action<Vector2> onScroll;
 
     [SerializeField]
-    RectTransform.Axis _axis;
+    Axis _axis;
     [SerializeField]
     RectTransform _viewport;
     [SerializeField]
@@ -69,10 +82,12 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     public void SetEdgeDelta(float edgesDelta)
     {
         if (_isDragging)
-            _elasticity = 1f - Mathf.Clamp01(Mathf.Abs(edgesDelta) / _viewport.rect.height);
+        {
+            float viewportLengthSqr = Vector2.Scale(_viewport.rect.size, AxisMasks[_axis]).sqrMagnitude;
+            _elasticity = 1f - Mathf.Clamp01(edgesDelta * edgesDelta / viewportLengthSqr);
+        }
 
-        Vector2 mask = _axis == RectTransform.Axis.Horizontal ? Vector2.right : Vector2.up;
-        _edgeDelta = mask * edgesDelta * _elasticityCoef;
+        _edgeDelta = AxisMasks[_axis] * edgesDelta * _elasticityCoef;
         if (!Mathf.Approximately(edgesDelta, 0f))
             _inertiaVelocity = Vector2.zero;
     }
@@ -92,18 +107,15 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     void OnScroll(Vector2 delta)
     {
-        if (!CheckVectorMagnitude(delta))
-            return;
-
-        onScroll?.Invoke(_axis == RectTransform.Axis.Horizontal ? delta.x : delta.y);
+        if (CheckVectorMagnitude(delta))
+            onScroll?.Invoke(delta);
     }
 
     Vector2 GetDeltaPosition(PointerEventData eventData)
     {
         RectTransformUtility.ScreenPointToLocalPointInRectangle(_viewport, eventData.position, eventData.pressEventCamera,
             out Vector2 finishPosition);
-        Vector2 mask = _axis == RectTransform.Axis.Horizontal ? Vector2.right : Vector2.up;
-        Vector2 delta = Vector2.Scale(finishPosition - _startPosition, mask);
+        var delta = Vector2.Scale(finishPosition - _startPosition, AxisMasks[_axis]);
         _startPosition = finishPosition;
 
         if (_elasticity < 1f)

@@ -43,9 +43,9 @@ public class DynamicScrollContent : IDisposable
         _itemWidgetsPool.Dispose();
     }
 
-    public void Move(float delta)
+    public void Move(Vector2 delta)
     {
-        _node.anchoredPosition += Vector2.up * delta;
+        _node.anchoredPosition += delta;
     }
 
     public bool CanInflate(ViewportEdge edge, Rect viewportWorldRect)
