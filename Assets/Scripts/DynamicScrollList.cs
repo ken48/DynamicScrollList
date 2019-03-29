@@ -1,9 +1,7 @@
 ﻿using UnityEngine;
 
-// Todo: crash on destroy
 // Todo: common logic for horizontal & vertical scroll
-// Todo: adding, deleting, changing of element
-// Todo: items array enlarging on fly
+// Todo: adding, deleting, changing of element on fly
 // Todo: navigation to some data index
 
 public class DynamicScrollList : MonoBehaviour
