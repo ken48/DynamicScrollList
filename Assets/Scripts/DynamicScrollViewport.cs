@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
+
+public enum ViewportEdge
+{
+    Head,
+    Tail,
+}
 
 public class DynamicScrollViewport
 {

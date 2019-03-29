@@ -1,17 +1,5 @@
 ﻿using UnityEngine;
 
-public enum ScrollDirection
-{
-    Forward,
-    Back,
-}
-
-public enum ViewportEdge
-{
-    Head,
-    Tail,
-}
-
 public interface IDynamicScrollItem
 {
 }
