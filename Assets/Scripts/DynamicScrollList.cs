@@ -1,7 +1,6 @@
 ﻿using System;
 using UnityEngine;
 
-// Todo: common logic for horizontal & vertical scroll
 // Todo: adding, deleting, changing of element on fly
 // Todo: navigation to some data index
 

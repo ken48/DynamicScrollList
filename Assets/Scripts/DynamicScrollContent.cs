@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // Todo: common logic for horizontal and vertical axis
+// Стоит пока начинать старт открутки снизу, чтобы обощить знак изменения как для горизонта, так и для вертикали.
 
 public class DynamicScrollContent : IDisposable
 {
