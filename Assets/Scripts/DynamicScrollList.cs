@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 // Todo: common logic for horizontal & vertical scroll
 // Todo: adding, deleting, changing of element on fly
@@ -18,6 +19,7 @@ public class DynamicScrollList : MonoBehaviour
     IDynamicScrollItemProvider _itemProvider;
     DynamicScrollViewport _dynamicViewport;
     DynamicScrollContent _dynamicContent;
+    ViewportEdge[] _allEdges;
 
     void Awake()
     {
@@ -29,6 +31,7 @@ public class DynamicScrollList : MonoBehaviour
         _itemProvider = itemProvider;
         _dynamicViewport = new DynamicScrollViewport(i => _itemProvider.GetItemByIndex(i) != null);
         _dynamicContent = new DynamicScrollContent(itemWidgetProvider, _viewportNode, _contentNode, _spacing);
+        _allEdges = (ViewportEdge[])Enum.GetValues(typeof(ViewportEdge));
 
         // Initial refresh
         OnScroll(Vector2.zero);
@@ -93,7 +96,7 @@ public class DynamicScrollList : MonoBehaviour
 
     float GetEdgeDelta()
     {
-        foreach (ViewportEdge edge in DynamicScrollViewport.OppositeEdges.Keys)
+        foreach (ViewportEdge edge in _allEdges)
             if (_dynamicViewport.CheckEdge(edge))
                 return _dynamicContent.GetEdgeDelta(edge);
         return 0f;
