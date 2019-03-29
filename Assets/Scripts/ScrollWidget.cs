@@ -79,17 +79,24 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         OnScroll(delta);
     }
 
-    public void SetEdgeDelta(float edgesDelta)
+    public void SetEdgeDelta(Vector2 edgesDelta)
     {
+        Vector2 edgesDeltaAxis = Vector2.Scale(edgesDelta, AxisMasks[_axis]);
+        float edgesDeltaAxisSqr = edgesDeltaAxis.sqrMagnitude;
         if (_isDragging)
         {
             float viewportLengthSqr = Vector2.Scale(_viewport.rect.size, AxisMasks[_axis]).sqrMagnitude;
-            _elasticity = 1f - Mathf.Clamp01(edgesDelta * edgesDelta / viewportLengthSqr);
+            _elasticity = 1f - Mathf.Clamp01(edgesDeltaAxisSqr / viewportLengthSqr);
         }
 
-        _edgeDelta = AxisMasks[_axis] * edgesDelta * _elasticityCoef;
-        if (!Mathf.Approximately(edgesDelta, 0f))
+        _edgeDelta = edgesDeltaAxis * _elasticityCoef;
+        if (edgesDeltaAxisSqr > 0f)
             _inertiaVelocity = Vector2.zero;
+    }
+
+    public Vector2 GetAxisMask()
+    {
+        return AxisMasks[_axis];
     }
 
     void LateUpdate()

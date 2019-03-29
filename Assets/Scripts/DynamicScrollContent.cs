@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+// Todo: common logic for horizontal and vertical axis
+
 public class DynamicScrollContent : IDisposable
 {
+    // Todo: axis masking
     static readonly Dictionary<ViewportEdge, Func<Rect, Vector2>> RectEdgePosition = new Dictionary<ViewportEdge, Func<Rect, Vector2>>
     {
         { ViewportEdge.Head, r => r.max },
         { ViewportEdge.Tail, r => r.min },
     };
 
+    // Todo: axis masking
     static readonly Dictionary<ViewportEdge, Func<Rect, float, bool>> ViewportCheckEdge = new Dictionary<ViewportEdge, Func<Rect, float, bool>>
     {
         { ViewportEdge.Head, (v, p) => v.yMax > p },
@@ -21,19 +25,19 @@ public class DynamicScrollContent : IDisposable
     readonly List<IDynamicScrollItemWidget> _widgets;
     readonly RectTransform _viewport;
     readonly RectTransform _node;
-    readonly float _spacing;
-    readonly Dictionary<ViewportEdge, float> _edgesLastPositions;
+    readonly Vector2 _spacing;
+    readonly Dictionary<ViewportEdge, Vector2> _edgesLastPositions;
 
-    public DynamicScrollContent(IDynamicScrollItemWidgetProvider itemWidgetProvider, RectTransform viewport, RectTransform node, float spacing)
+    public DynamicScrollContent(IDynamicScrollItemWidgetProvider itemWidgetProvider, RectTransform viewport, RectTransform node, Vector2 spacing)
     {
         _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, node);
         _viewport = viewport;
         _node = node;
         _spacing = spacing;
         _widgets = new List<IDynamicScrollItemWidget>();
-        _edgesLastPositions = new Dictionary<ViewportEdge, float>
+        _edgesLastPositions = new Dictionary<ViewportEdge, Vector2>
         {
-            { ViewportEdge.Head, 0f },
+            { ViewportEdge.Head, Vector2.zero },
             { ViewportEdge.Tail, _spacing },
         };
     }
@@ -57,11 +61,11 @@ public class DynamicScrollContent : IDisposable
         {
             RectTransform rectTransform = GetEdgeWidget(edge).rectTransform;
             Vector2 edgePosition = RectEdgePosition[edge](rectTransform.rect);
-            startPos = rectTransform.TransformPoint(edgePosition + Vector2.up * _spacing * sign).y;
+            startPos = rectTransform.TransformPoint(edgePosition + _spacing * sign).y; // Todo: axis masking
         }
         else
         {
-            startPos = _node.TransformPoint(Vector2.up * _edgesLastPositions[edge] + Vector2.up * _spacing * sign).y;
+            startPos = _node.TransformPoint(_edgesLastPositions[edge] + _spacing * sign).y; // Todo: axis masking
         }
 
         return ViewportCheckEdge[edge](viewportWorldRect, startPos);
@@ -74,23 +78,23 @@ public class DynamicScrollContent : IDisposable
         LayoutRebuilder.ForceRebuildLayoutImmediate(widget.rectTransform);
         RectTransform widgetRectTransform = widget.rectTransform;
 
-        float newPosition = _edgesLastPositions[edge];
+        Vector2 newPosition = _edgesLastPositions[edge];
         switch (edge)
         {
             case ViewportEdge.Head:
                 _widgets.Insert(0, widget);
-                newPosition += _spacing + widgetRectTransform.rect.height;
+                newPosition += _spacing + widgetRectTransform.rect.size;
                 _edgesLastPositions[edge] = newPosition;
                 break;
 
             case ViewportEdge.Tail:
                 _widgets.Add(widget);
                 newPosition -= _spacing;
-                _edgesLastPositions[edge] = newPosition - widgetRectTransform.rect.height;
+                _edgesLastPositions[edge] = newPosition - widgetRectTransform.rect.size;
                 break;
         }
 
-        widgetRectTransform.anchoredPosition = Vector2.up * newPosition;
+        widgetRectTransform.anchoredPosition = newPosition * Vector2.up; // Todo: axis masking
     }
 
     public bool CanDeflate(ViewportEdge edge, Rect viewportWorldRect)
@@ -102,30 +106,30 @@ public class DynamicScrollContent : IDisposable
     {
         IDynamicScrollItemWidget widget = GetEdgeWidget(edge);
         float sign = Mathf.Sign(DynamicScrollViewport.InflationShifts[edge]);
-        _edgesLastPositions[edge] += (widget.rectTransform.rect.height + _spacing) * sign;
+        _edgesLastPositions[edge] += (widget.rectTransform.rect.size + _spacing) * sign * Vector2.up; // Todo: axis masking
 
         _itemWidgetsPool.ReturnWidget(widget);
         _widgets.Remove(widget);
     }
 
-    public float GetEdgeDelta(ViewportEdge edge)
+    public Vector2 GetEdgeDelta(ViewportEdge edge)
     {
-        float edgeLastPosition = -_edgesLastPositions[edge];
+        Vector2 edgeLastPosition = -_edgesLastPositions[edge];
         switch (edge)
         {
             case ViewportEdge.Head:
-                float headEdgePosition = edgeLastPosition;
-                if (_node.anchoredPosition.y < headEdgePosition)
-                    return (Vector2.up * headEdgePosition - _node.anchoredPosition).y;
+                Vector2 headEdgePosition = edgeLastPosition;
+                if (_node.anchoredPosition.y < headEdgePosition.y) // Todo: axis masking
+                    return headEdgePosition - _node.anchoredPosition;
                 break;
 
             case ViewportEdge.Tail:
-                float bottomEdgePosition = edgeLastPosition - _viewport.rect.height;
-                if (_node.anchoredPosition.y > bottomEdgePosition)
-                    return (Vector2.up * bottomEdgePosition - _node.anchoredPosition).y;
+                Vector2 bottomEdgePosition = edgeLastPosition - _viewport.rect.size;
+                if (_node.anchoredPosition.y > bottomEdgePosition.y) // Todo: axis masking
+                    return bottomEdgePosition - _node.anchoredPosition;
                 break;
         }
-        return 0f;
+        return Vector2.zero;
     }
 
     bool IsEmpty()

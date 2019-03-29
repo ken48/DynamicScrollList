@@ -30,7 +30,7 @@ public class DynamicScrollList : MonoBehaviour
     {
         _itemProvider = itemProvider;
         _dynamicViewport = new DynamicScrollViewport(i => _itemProvider.GetItemByIndex(i) != null);
-        _dynamicContent = new DynamicScrollContent(itemWidgetProvider, _viewportNode, _contentNode, _spacing);
+        _dynamicContent = new DynamicScrollContent(itemWidgetProvider, _viewportNode, _contentNode, _spacing * _scrollWidget.GetAxisMask());
         _allEdges = (ViewportEdge[])Enum.GetValues(typeof(ViewportEdge));
 
         // Initial refresh
@@ -94,11 +94,11 @@ public class DynamicScrollList : MonoBehaviour
         return _dynamicViewport.Deflate(edge);
     }
 
-    float GetEdgeDelta()
+    Vector2 GetEdgeDelta()
     {
         foreach (ViewportEdge edge in _allEdges)
             if (_dynamicViewport.CheckEdge(edge))
                 return _dynamicContent.GetEdgeDelta(edge);
-        return 0f;
+        return Vector2.zero;
     }
 }
