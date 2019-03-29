@@ -5,6 +5,18 @@ using UnityEngine.UI;
 
 public class DynamicScrollContent : IDisposable
 {
+    static readonly Dictionary<ViewportEdge, Func<Rect, Vector2>> RectEdgePosition = new Dictionary<ViewportEdge, Func<Rect, Vector2>>
+    {
+        { ViewportEdge.Head, r => r.max },
+        { ViewportEdge.Tail, r => r.min },
+    };
+
+    static readonly Dictionary<ViewportEdge, Func<Rect, float, bool>> ViewportCheckEdge = new Dictionary<ViewportEdge, Func<Rect, float, bool>>
+    {
+        { ViewportEdge.Head, (v, p) => v.yMax > p },
+        { ViewportEdge.Tail, (v, p) => v.yMin < p },
+    };
+
     readonly DynamicScrollItemWidgetsPool _itemWidgetsPool;
     readonly List<IDynamicScrollItemWidget> _widgets;
     readonly RectTransform _viewport;
@@ -43,8 +55,8 @@ public class DynamicScrollContent : IDisposable
         float startPos;
         if (!IsEmpty())
         {
-            RectTransform rectTransform = _widgets[GetEdgeIndex(edge)].rectTransform;
-            Vector2 edgePosition = edge == ViewportEdge.Head ? rectTransform.rect.max : rectTransform.rect.min;
+            RectTransform rectTransform = GetEdgeWidget(edge).rectTransform;
+            Vector2 edgePosition = RectEdgePosition[edge](rectTransform.rect);
             startPos = rectTransform.TransformPoint(edgePosition + Vector2.up * _spacing * sign).y;
         }
         else
@@ -52,7 +64,7 @@ public class DynamicScrollContent : IDisposable
             startPos = _node.TransformPoint(Vector2.up * _edgesLastPositions[edge] + Vector2.up * _spacing * sign).y;
         }
 
-        return edge == ViewportEdge.Head ? viewportWorldRect.yMax > startPos : viewportWorldRect.yMin < startPos;
+        return ViewportCheckEdge[edge](viewportWorldRect, startPos);
     }
 
     public void Inflate(ViewportEdge edge, IDynamicScrollItem item)
@@ -83,18 +95,17 @@ public class DynamicScrollContent : IDisposable
 
     public bool CanDeflate(ViewportEdge edge, Rect viewportWorldRect)
     {
-        return !IsEmpty() && !IsWidgetOverlapsViewport(_widgets[GetEdgeIndex(edge)], viewportWorldRect);
+        return !IsEmpty() && !IsWidgetOverlapsViewport(GetEdgeWidget(edge), viewportWorldRect);
     }
 
     public void Deflate(ViewportEdge edge)
     {
-        int index = GetEdgeIndex(edge);
-        IDynamicScrollItemWidget widget = _widgets[index];
+        IDynamicScrollItemWidget widget = GetEdgeWidget(edge);
         float sign = Mathf.Sign(DynamicScrollViewport.InflationShifts[edge]);
         _edgesLastPositions[edge] += (widget.rectTransform.rect.height + _spacing) * sign;
 
         _itemWidgetsPool.ReturnWidget(widget);
-        _widgets.RemoveAt(index);
+        _widgets.Remove(widget);
     }
 
     public float GetEdgeDelta(ViewportEdge edge)
@@ -122,9 +133,9 @@ public class DynamicScrollContent : IDisposable
         return _widgets.Count == 0;
     }
 
-    int GetEdgeIndex(ViewportEdge edge)
+    IDynamicScrollItemWidget GetEdgeWidget(ViewportEdge edge)
     {
-        return edge == ViewportEdge.Head ? 0 : _widgets.Count - 1;
+        return _widgets[edge == ViewportEdge.Head ? 0 : _widgets.Count - 1];
     }
 
     static bool IsWidgetOverlapsViewport(IDynamicScrollItemWidget widget, Rect viewportWorldRect)

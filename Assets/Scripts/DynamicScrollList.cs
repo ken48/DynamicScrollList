@@ -96,6 +96,6 @@ public class DynamicScrollList : MonoBehaviour
         foreach (ViewportEdge edge in DynamicScrollViewport.OppositeEdges.Keys)
             if (_dynamicViewport.CheckEdge(edge))
                 return _dynamicContent.GetEdgeDelta(edge);
-        return 0;
+        return 0f;
     }
 }
