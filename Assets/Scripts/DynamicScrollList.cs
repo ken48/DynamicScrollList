@@ -29,7 +29,7 @@ public class DynamicScrollList : MonoBehaviour
     {
         _itemProvider = itemProvider;
         _dynamicViewport = new DynamicScrollViewport(i => _itemProvider.GetItemByIndex(i) != null);
-        _dynamicContent = new DynamicScrollContent(itemWidgetProvider, _viewportNode, _contentNode, _spacing * _scrollWidget.GetAxisMask());
+        _dynamicContent = new DynamicScrollContent(itemWidgetProvider, _viewportNode, _contentNode, _spacing, _scrollWidget.GetAxisMask());
         _allEdges = (ViewportEdge[])Enum.GetValues(typeof(ViewportEdge));
 
         // Initial refresh
