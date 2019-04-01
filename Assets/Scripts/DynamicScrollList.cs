@@ -56,13 +56,13 @@ public class DynamicScrollList : MonoBehaviour
         float deltaFloat = delta.x + delta.y;
         if (deltaFloat >= 0f)
         {
-            while (TryDeflate(ViewportEdge.Head, viewportWorldRect));
-            while (TryInflate(ViewportEdge.Tail, viewportWorldRect));
+            while (TryDeflate(ViewportEdge.Tail, viewportWorldRect));
+            while (TryInflate(ViewportEdge.Head, viewportWorldRect));
         }
         else if (deltaFloat < 0f)
         {
-            while (TryDeflate(ViewportEdge.Tail, viewportWorldRect));
-            while (TryInflate(ViewportEdge.Head, viewportWorldRect));
+            while (TryDeflate(ViewportEdge.Head, viewportWorldRect));
+            while (TryInflate(ViewportEdge.Tail, viewportWorldRect));
         }
 
         _scrollWidget.SetEdgeDelta(GetEdgeDelta());
