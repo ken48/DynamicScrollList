@@ -7,12 +7,14 @@ using UnityEngine.UI;
 
 public class DynamicScrollContent : IDisposable
 {
+    // Todo: direction (swap)
     static readonly Dictionary<ViewportEdge, Func<Rect, Vector2>> RectEdgePosition = new Dictionary<ViewportEdge, Func<Rect, Vector2>>
     {
         { ViewportEdge.Head, r => r.min },
         { ViewportEdge.Tail, r => r.max },
     };
 
+    // Todo: direction (sign)
     static readonly Dictionary<ViewportEdge, Func<Vector2, Vector2, bool>> ViewportCheckEdge = new Dictionary<ViewportEdge, Func<Vector2, Vector2, bool>>
     {
         { ViewportEdge.Head, (v, p) => DynamicScrollHelpers.GetVectorComponent(v) < DynamicScrollHelpers.GetVectorComponent(p) },
@@ -87,7 +89,7 @@ public class DynamicScrollContent : IDisposable
 
     public bool CanDeflate(ViewportEdge edge, Rect viewportWorldRect)
     {
-        return !IsEmpty() && !IsWidgetOverlapsViewport(GetEdgeWidget(edge), viewportWorldRect);
+        return !IsEmpty() && !DynamicScrollHelpers.GetWorldRect(GetEdgeWidget(edge).rectTransform).Overlaps(viewportWorldRect);
     }
 
     public void Deflate(ViewportEdge edge)
@@ -100,8 +102,10 @@ public class DynamicScrollContent : IDisposable
         _widgets.Remove(widget);
     }
 
-    public Vector2 GetEdgeDelta(ViewportEdge edge)
+    public Vector2 GetEdgeDelta(ViewportEdge edge, Rect viewportWorldRect)
     {
+        return /*CanInflate(edge, viewportWorldRect) ?  :*/ Vector2.zero;
+
         // Vector2 edgeLastPosition = -_edgesLastPositions[edge];
         // switch (edge)
         // {
@@ -117,7 +121,8 @@ public class DynamicScrollContent : IDisposable
         //             return bottomEdgePosition - _node.anchoredPosition;
         //         break;
         // }
-        return Vector2.zero;
+        //
+        // return Vector2.zero;
     }
 
     bool IsEmpty()
@@ -128,10 +133,5 @@ public class DynamicScrollContent : IDisposable
     IDynamicScrollItemWidget GetEdgeWidget(ViewportEdge edge)
     {
         return _widgets[edge == ViewportEdge.Head ? 0 : _widgets.Count - 1];
-    }
-
-    static bool IsWidgetOverlapsViewport(IDynamicScrollItemWidget widget, Rect viewportWorldRect)
-    {
-        return DynamicScrollHelpers.GetWorldRect(widget.rectTransform).Overlaps(viewportWorldRect);
     }
 }

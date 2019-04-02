@@ -18,7 +18,6 @@ public class DynamicScrollList : MonoBehaviour
     IDynamicScrollItemProvider _itemProvider;
     DynamicScrollViewport _dynamicViewport;
     DynamicScrollContent _dynamicContent;
-    ViewportEdge[] _allEdges;
 
     void Awake()
     {
@@ -30,7 +29,6 @@ public class DynamicScrollList : MonoBehaviour
         _itemProvider = itemProvider;
         _dynamicViewport = new DynamicScrollViewport(i => _itemProvider.GetItemByIndex(i) != null);
         _dynamicContent = new DynamicScrollContent(itemWidgetProvider, _viewportNode, _contentNode, _spacing, _scrollWidget.GetAxisMask());
-        _allEdges = (ViewportEdge[])Enum.GetValues(typeof(ViewportEdge));
 
         // Initial refresh
         OnScroll(-Vector2.one * Mathf.Epsilon);
@@ -54,18 +52,10 @@ public class DynamicScrollList : MonoBehaviour
 
         // Select non zero vector component
         float deltaFloat = DynamicScrollHelpers.GetVectorComponent(delta * _scrollWidget.GetAxisMask());
-        if (deltaFloat < 0f)
-        {
-            while (TryDeflate(ViewportEdge.Head, viewportWorldRect));
-            while (TryInflate(ViewportEdge.Tail, viewportWorldRect));
-        }
-        else if (deltaFloat > 0f)
-        {
-            while (TryDeflate(ViewportEdge.Tail, viewportWorldRect));
-            while (TryInflate(ViewportEdge.Head, viewportWorldRect));
-        }
-
-        _scrollWidget.SetEdgeDelta(GetEdgeDelta());
+        ViewportEdge inflationEdge = deltaFloat > 0f ? ViewportEdge.Head : ViewportEdge.Tail;
+        while (TryDeflate(DynamicScrollViewport.OppositeEdges[inflationEdge], viewportWorldRect));
+        while (TryInflate(inflationEdge, viewportWorldRect));
+        _scrollWidget.SetEdgeDelta(GetEdgeDelta(inflationEdge, viewportWorldRect));
     }
 
     bool TryInflate(ViewportEdge edge, Rect viewportWorldRect)
@@ -93,12 +83,10 @@ public class DynamicScrollList : MonoBehaviour
         return _dynamicViewport.Deflate(edge);
     }
 
-    Vector2 GetEdgeDelta()
+    Vector2 GetEdgeDelta(ViewportEdge edge, Rect viewportWorldRect)
     {
-        foreach (ViewportEdge edge in _allEdges)
-            if (_dynamicViewport.CheckEdge(edge))
-                return _dynamicContent.GetEdgeDelta(edge);
-        return Vector2.zero;
+        return _dynamicViewport.CheckEdge(edge) ?
+            _dynamicContent.GetEdgeDelta(edge, viewportWorldRect) : Vector2.zero;
     }
 }
 
