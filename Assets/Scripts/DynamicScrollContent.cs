@@ -104,25 +104,8 @@ public class DynamicScrollContent : IDisposable
 
     public Vector2 GetEdgeDelta(ViewportEdge edge, Rect viewportWorldRect)
     {
-        return /*CanInflate(edge, viewportWorldRect) ?  :*/ Vector2.zero;
-
-        // Vector2 edgeLastPosition = -_edgesLastPositions[edge];
-        // switch (edge)
-        // {
-        //     case ViewportEdge.Head:
-        //         Vector2 headEdgePosition = edgeLastPosition;
-        //         if (GetVectorComponent(_node.anchoredPosition) < GetVectorComponent(headEdgePosition)) // Todo: lt gt
-        //             return headEdgePosition - _node.anchoredPosition;
-        //         break;
-        //
-        //     case ViewportEdge.Tail:
-        //         Vector2 bottomEdgePosition = edgeLastPosition - _viewport.rect.size;
-        //         if (GetVectorComponent(_node.anchoredPosition) > GetVectorComponent(bottomEdgePosition)) // Todo: lt gt
-        //             return bottomEdgePosition - _node.anchoredPosition;
-        //         break;
-        // }
-        //
-        // return Vector2.zero;
+        // Todo: consider  +_viewport.rect.size for Tail
+        return CanInflate(edge, viewportWorldRect) ? _edgesLastPositions[edge] - _node.anchoredPosition : Vector2.zero;
     }
 
     bool IsEmpty()
