@@ -15,7 +15,7 @@ public class DynamicScrollViewport
         { ViewportEdge.Tail, ViewportEdge.Head },
     };
 
-    public static readonly Dictionary<ViewportEdge, int> InflationShifts = new Dictionary<ViewportEdge, int>
+    public static readonly Dictionary<ViewportEdge, int> InflationSigns = new Dictionary<ViewportEdge, int>
     {
         { ViewportEdge.Head, -1 },
         { ViewportEdge.Tail, 1 },
@@ -36,7 +36,7 @@ public class DynamicScrollViewport
 
     public bool Inflate(ViewportEdge edge)
     {
-        int newIndex = _indices[edge] + InflationShifts[edge];
+        int newIndex = _indices[edge] + InflationSigns[edge];
         if (!_onCheckItem(newIndex))
             return false;
 
@@ -52,7 +52,7 @@ public class DynamicScrollViewport
         if (IsEmpty())
             return false;
 
-        _indices[edge] -= InflationShifts[edge];
+        _indices[edge] -= InflationSigns[edge];
         CheckIndices();
         return true;
     }
@@ -64,7 +64,7 @@ public class DynamicScrollViewport
 
     public bool CheckEdge(ViewportEdge edge)
     {
-        return !_onCheckItem(_indices[edge] + InflationShifts[edge]);
+        return !_onCheckItem(_indices[edge] + InflationSigns[edge]);
     }
 
     bool IsEmpty()

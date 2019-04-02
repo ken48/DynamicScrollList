@@ -13,10 +13,10 @@ public class DynamicScrollContent : IDisposable
         { ViewportEdge.Tail, r => r.max },
     };
 
-    static readonly Dictionary<ViewportEdge, Func<Rect, Vector2, bool>> ViewportCheckEdge = new Dictionary<ViewportEdge, Func<Rect, Vector2, bool>>
+    static readonly Dictionary<ViewportEdge, Func<Vector2, Vector2, bool>> ViewportCheckEdge = new Dictionary<ViewportEdge, Func<Vector2, Vector2, bool>>
     {
-        { ViewportEdge.Head, (v, p) => GetVectorComponent(v.min) < GetVectorComponent(p) }, // Todo: lt gt
-        { ViewportEdge.Tail, (v, p) => GetVectorComponent(v.max) > GetVectorComponent(p) }, // Todo: lt gt
+        { ViewportEdge.Head, (v, p) => DynamicScrollHelpers.GetVectorComponent(v) < DynamicScrollHelpers.GetVectorComponent(p) },
+        { ViewportEdge.Tail, (v, p) => DynamicScrollHelpers.GetVectorComponent(v) > DynamicScrollHelpers.GetVectorComponent(p) },
     };
 
     readonly DynamicScrollItemWidgetsPool _itemWidgetsPool;
@@ -38,8 +38,8 @@ public class DynamicScrollContent : IDisposable
         _widgets = new List<IDynamicScrollItemWidget>();
         _edgesLastPositions = new Dictionary<ViewportEdge, Vector2>
         {
-            { ViewportEdge.Head, -_spacing },
-            { ViewportEdge.Tail, Vector2.zero },
+            { ViewportEdge.Head, Vector2.zero },
+            { ViewportEdge.Tail, -_spacing },
         };
     }
 
@@ -55,21 +55,9 @@ public class DynamicScrollContent : IDisposable
 
     public bool CanInflate(ViewportEdge edge, Rect viewportWorldRect)
     {
-        float sign = Mathf.Sign(DynamicScrollViewport.InflationShifts[edge]);
-
-        Vector2 startPos;
-        if (!IsEmpty())
-        {
-            RectTransform rectTransform = GetEdgeWidget(edge).rectTransform;
-            Vector2 edgePosition = RectEdgePosition[edge](rectTransform.rect);
-            startPos = rectTransform.TransformPoint(edgePosition + _spacing * sign);
-        }
-        else
-        {
-            startPos = _node.TransformPoint(_edgesLastPositions[edge] + _spacing * sign);
-        }
-
-        return ViewportCheckEdge[edge](viewportWorldRect, startPos * _axisMask);
+        int sign = DynamicScrollViewport.InflationSigns[edge];
+        Vector2 startPos = _node.TransformPoint(_edgesLastPositions[edge] + _spacing * sign);
+        return ViewportCheckEdge[edge](RectEdgePosition[edge](viewportWorldRect) * _axisMask, startPos * _axisMask);
     }
 
     public void Inflate(ViewportEdge edge, IDynamicScrollItem item)
@@ -79,7 +67,7 @@ public class DynamicScrollContent : IDisposable
         LayoutRebuilder.ForceRebuildLayoutImmediate(widget.rectTransform);
         RectTransform widgetRectTransform = widget.rectTransform;
 
-        float sign = Mathf.Sign(DynamicScrollViewport.InflationShifts[edge]);
+        float sign = DynamicScrollViewport.InflationSigns[edge];
         Vector2 newPosition = _edgesLastPositions[edge] + (widget.rectTransform.rect.size + _spacing) * sign * _axisMask;
         _edgesLastPositions[edge] = newPosition;
         widgetRectTransform.anchoredPosition = newPosition;
@@ -105,7 +93,7 @@ public class DynamicScrollContent : IDisposable
     public void Deflate(ViewportEdge edge)
     {
         IDynamicScrollItemWidget widget = GetEdgeWidget(edge);
-        float sign = -Mathf.Sign(DynamicScrollViewport.InflationShifts[edge]);
+        float sign = -DynamicScrollViewport.InflationSigns[edge];
         _edgesLastPositions[edge] += (widget.rectTransform.rect.size + _spacing) * sign * _axisMask;
 
         _itemWidgetsPool.ReturnWidget(widget);
@@ -144,23 +132,6 @@ public class DynamicScrollContent : IDisposable
 
     static bool IsWidgetOverlapsViewport(IDynamicScrollItemWidget widget, Rect viewportWorldRect)
     {
-        return RectHelpers.GetWorldRect(widget.rectTransform).Overlaps(viewportWorldRect);
-    }
-
-    // Todo: make common helper
-    static float GetVectorComponent(Vector2 v)
-    {
-        return v.x + v.y;
-    }
-}
-
-static class RectHelpers
-{
-    public static Rect GetWorldRect(RectTransform rectTransform)
-    {
-        Rect rect = rectTransform.rect;
-        Vector2 worldRectMin = rectTransform.TransformPoint(rect.min);
-        Vector2 worldRectMax = rectTransform.TransformPoint(rect.max);
-        return Rect.MinMaxRect(worldRectMin.x, worldRectMin.y, worldRectMax.x, worldRectMax.y);
+        return DynamicScrollHelpers.GetWorldRect(widget.rectTransform).Overlaps(viewportWorldRect);
     }
 }

@@ -33,7 +33,7 @@ public class DynamicScrollList : MonoBehaviour
         _allEdges = (ViewportEdge[])Enum.GetValues(typeof(ViewportEdge));
 
         // Initial refresh
-        OnScroll(Vector2.zero);
+        OnScroll(-Vector2.one * Mathf.Epsilon);
     }
 
     public void Shutdown()
@@ -50,19 +50,19 @@ public class DynamicScrollList : MonoBehaviour
     {
         _dynamicContent.Move(delta);
 
-        Rect viewportWorldRect = RectHelpers.GetWorldRect(_viewportNode);
+        Rect viewportWorldRect = DynamicScrollHelpers.GetWorldRect(_viewportNode);
 
         // Select non zero vector component
-        float deltaFloat = delta.x + delta.y;
-        if (deltaFloat >= 0f)
-        {
-            while (TryDeflate(ViewportEdge.Tail, viewportWorldRect));
-            while (TryInflate(ViewportEdge.Head, viewportWorldRect));
-        }
-        else if (deltaFloat < 0f)
+        float deltaFloat = DynamicScrollHelpers.GetVectorComponent(delta * _scrollWidget.GetAxisMask());
+        if (deltaFloat < 0f)
         {
             while (TryDeflate(ViewportEdge.Head, viewportWorldRect));
             while (TryInflate(ViewportEdge.Tail, viewportWorldRect));
+        }
+        else if (deltaFloat > 0f)
+        {
+            while (TryDeflate(ViewportEdge.Tail, viewportWorldRect));
+            while (TryInflate(ViewportEdge.Head, viewportWorldRect));
         }
 
         _scrollWidget.SetEdgeDelta(GetEdgeDelta());
@@ -99,5 +99,27 @@ public class DynamicScrollList : MonoBehaviour
             if (_dynamicViewport.CheckEdge(edge))
                 return _dynamicContent.GetEdgeDelta(edge);
         return Vector2.zero;
+    }
+}
+
+//
+// Helpers
+//
+
+public static class DynamicScrollHelpers
+{
+    // Todo: make it more explicitly
+    public static float GetVectorComponent(Vector2 v)
+    {
+        // One of them is always zero
+        return v.x + v.y;
+    }
+
+    public static Rect GetWorldRect(RectTransform rectTransform)
+    {
+        Rect rect = rectTransform.rect;
+        Vector2 worldRectMin = rectTransform.TransformPoint(rect.min);
+        Vector2 worldRectMax = rectTransform.TransformPoint(rect.max);
+        return Rect.MinMaxRect(worldRectMin.x, worldRectMin.y, worldRectMax.x, worldRectMax.y);
     }
 }
