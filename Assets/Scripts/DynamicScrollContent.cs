@@ -102,10 +102,14 @@ public class DynamicScrollContent : IDisposable
         _widgets.Remove(widget);
     }
 
-    public Vector2 GetEdgeDelta(ViewportEdge edge, Rect viewportWorldRect)
+    public Vector2 GetEdgeDelta(ViewportEdge edge)
     {
-        // Todo: consider  +_viewport.rect.size for Tail
-        return CanInflate(edge, viewportWorldRect) ? _edgesLastPositions[edge] - _node.anchoredPosition : Vector2.zero;
+        Rect viewportRect = _viewport.rect;
+        Vector2 result = -_edgesLastPositions[edge] - _node.anchoredPosition + RectEdgePosition[edge](viewportRect) + viewportRect.size * 0.5f;
+        float resultF = DynamicScrollHelpers.GetVectorComponent(result * _axisMask);
+        if ((int)Mathf.Sign(resultF) != DynamicScrollViewport.InflationSigns[edge])
+            return Vector2.zero;
+        return result;
     }
 
     bool IsEmpty()

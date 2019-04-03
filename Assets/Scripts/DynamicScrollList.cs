@@ -55,7 +55,7 @@ public class DynamicScrollList : MonoBehaviour
         ViewportEdge inflationEdge = deltaFloat > 0f ? ViewportEdge.Head : ViewportEdge.Tail;
         while (TryDeflate(DynamicScrollViewport.OppositeEdges[inflationEdge], viewportWorldRect));
         while (TryInflate(inflationEdge, viewportWorldRect));
-        _scrollWidget.SetEdgeDelta(GetEdgeDelta(inflationEdge, viewportWorldRect));
+        _scrollWidget.SetEdgeDelta(GetEdgeDelta());
     }
 
     bool TryInflate(ViewportEdge edge, Rect viewportWorldRect)
@@ -83,10 +83,12 @@ public class DynamicScrollList : MonoBehaviour
         return _dynamicViewport.Deflate(edge);
     }
 
-    Vector2 GetEdgeDelta(ViewportEdge edge, Rect viewportWorldRect)
+    Vector2 GetEdgeDelta()
     {
-        return _dynamicViewport.CheckEdge(edge) ?
-            _dynamicContent.GetEdgeDelta(edge, viewportWorldRect) : Vector2.zero;
+        foreach (var et in DynamicScrollHelpers.GetViewportEdges())
+            if (_dynamicViewport.CheckEdge(et))
+                return _dynamicContent.GetEdgeDelta(et);
+        return Vector2.zero;
     }
 }
 
@@ -96,6 +98,15 @@ public class DynamicScrollList : MonoBehaviour
 
 public static class DynamicScrollHelpers
 {
+    static ViewportEdge[] _viewportEdges;
+
+    public static ViewportEdge[] GetViewportEdges()
+    {
+        if (_viewportEdges == null)
+            _viewportEdges = (ViewportEdge[])Enum.GetValues(typeof(ViewportEdge));
+        return _viewportEdges;
+    }
+
     // Todo: make it more explicitly
     public static float GetVectorComponent(Vector2 v)
     {
