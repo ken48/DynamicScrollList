@@ -48,7 +48,7 @@ public class ChatItemWidgetsProvider : IDynamicScrollItemWidgetProvider
 
     public void ReturnItemWidget(IDynamicScrollItemWidget itemWidget)
     {
-        if (itemWidget != null)
+        if (itemWidget as Component != null)
             GameObject.Destroy(itemWidget.go);
     }
 }

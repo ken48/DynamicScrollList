@@ -73,10 +73,8 @@ public class DynamicScrollItemWidgetsPool : IDisposable
         if (!_itemWidgets.TryGetValue(itemWidget.GetType(), out List<WidgetInfo> widgets))
             throw new Exception("Return widget before creation");
 
+        WidgetInfo widgetInfo = widgets.Find(w => w.itemWidget == itemWidget);
         itemWidget.go.SetActive(false);
-        widgets.Add(new WidgetInfo
-        {
-            itemWidget = itemWidget,
-        });
+        widgetInfo.isActive = false;
     }
 }

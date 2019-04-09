@@ -11,13 +11,10 @@ public class DynamicScrollList : MonoBehaviour
     [SerializeField]
     RectTransform _viewportNode;
     [SerializeField]
-    RectTransform _contentNode;
-    [SerializeField]
-    float _spacing;
+    DynamicScrollContent _dynamicContent;
 
     IDynamicScrollItemProvider _itemProvider;
     DynamicScrollViewport _dynamicViewport;
-    DynamicScrollContent _dynamicContent;
 
     void Awake()
     {
@@ -28,7 +25,7 @@ public class DynamicScrollList : MonoBehaviour
     {
         _itemProvider = itemProvider;
         _dynamicViewport = new DynamicScrollViewport(i => _itemProvider.GetItemByIndex(i) != null);
-        _dynamicContent = new DynamicScrollContent(itemWidgetProvider, _viewportNode, _contentNode, _spacing, _scrollWidget.GetAxisMask());
+        _dynamicContent.Init(itemWidgetProvider, _viewportNode, _scrollWidget.GetAxisMask());
 
         // Initial refresh
         OnScroll(-Vector2.one * Mathf.Epsilon);
@@ -36,7 +33,7 @@ public class DynamicScrollList : MonoBehaviour
 
     public void Shutdown()
     {
-        _dynamicContent.Dispose();
+        _dynamicContent.Shutdown();
     }
 
     void OnDestroy()

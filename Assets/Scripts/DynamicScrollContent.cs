@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 // Todo: set pivots and anchors in code for widgets depends on it's growth direction and axis
 
-public class DynamicScrollContent : IDisposable
+public class DynamicScrollContent : MonoBehaviour
 {
     // Todo: direction (swap)
     static readonly Dictionary<ViewportEdge, Func<Rect, Vector2>> RectEdgePosition = new Dictionary<ViewportEdge, Func<Rect, Vector2>>
@@ -21,31 +21,34 @@ public class DynamicScrollContent : IDisposable
         { ViewportEdge.Tail, (v, p) => DynamicScrollHelpers.GetVectorComponent(v) > DynamicScrollHelpers.GetVectorComponent(p) },
     };
 
-    readonly DynamicScrollItemWidgetsPool _itemWidgetsPool;
-    readonly List<IDynamicScrollItemWidget> _widgets;
-    readonly RectTransform _viewport;
-    readonly RectTransform _node;
-    readonly Vector2 _spacing;
-    readonly Dictionary<ViewportEdge, Vector2> _edgesLastPositions;
-    readonly Vector2 _axisMask;
+    [SerializeField]
+    float _spacing;
 
-    public DynamicScrollContent(IDynamicScrollItemWidgetProvider itemWidgetProvider, RectTransform viewport, RectTransform node,
-        float spacing, Vector2 axisMask)
+    RectTransform _node;
+    RectTransform _viewport;
+    DynamicScrollItemWidgetsPool _itemWidgetsPool;
+    List<IDynamicScrollItemWidget> _widgets;
+    Dictionary<ViewportEdge, Vector2> _edgesLastPositions;
+    Vector2 _axisMask;
+    Vector2 _spacingVector;
+
+    public void Init(IDynamicScrollItemWidgetProvider itemWidgetProvider, RectTransform viewport, Vector2 axisMask)
     {
-        _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, node);
+        _node = (RectTransform)transform;
+        _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, _node);
         _viewport = viewport;
-        _node = node;
-        _spacing = spacing * axisMask;
         _axisMask = axisMask;
+        _spacingVector = _spacing * axisMask;
+
         _widgets = new List<IDynamicScrollItemWidget>();
         _edgesLastPositions = new Dictionary<ViewportEdge, Vector2>
         {
             { ViewportEdge.Head, Vector2.zero },
-            { ViewportEdge.Tail, -_spacing },
+            { ViewportEdge.Tail, -_spacingVector },
         };
     }
 
-    public void Dispose()
+    public void Shutdown()
     {
         _itemWidgetsPool.Dispose();
     }
@@ -58,7 +61,7 @@ public class DynamicScrollContent : IDisposable
     public bool CanInflate(ViewportEdge edge, Rect viewportWorldRect)
     {
         int sign = DynamicScrollViewport.InflationSigns[edge];
-        Vector2 startPos = _node.TransformPoint(_edgesLastPositions[edge] + _spacing * sign);
+        Vector2 startPos = _node.TransformPoint(_edgesLastPositions[edge] + _spacingVector * sign);
         return ViewportCheckEdge[edge](RectEdgePosition[edge](viewportWorldRect) * _axisMask, startPos * _axisMask);
     }
 
@@ -70,7 +73,7 @@ public class DynamicScrollContent : IDisposable
         RectTransform widgetRectTransform = widget.rectTransform;
 
         float sign = DynamicScrollViewport.InflationSigns[edge];
-        Vector2 newPosition = _edgesLastPositions[edge] + (widget.rectTransform.rect.size + _spacing) * sign * _axisMask;
+        Vector2 newPosition = _edgesLastPositions[edge] + (widget.rectTransform.rect.size + _spacingVector) * sign * _axisMask;
         _edgesLastPositions[edge] = newPosition;
         widgetRectTransform.anchoredPosition = newPosition;
 
@@ -96,7 +99,7 @@ public class DynamicScrollContent : IDisposable
     {
         IDynamicScrollItemWidget widget = GetEdgeWidget(edge);
         float sign = -DynamicScrollViewport.InflationSigns[edge];
-        _edgesLastPositions[edge] += (widget.rectTransform.rect.size + _spacing) * sign * _axisMask;
+        _edgesLastPositions[edge] += (widget.rectTransform.rect.size + _spacingVector) * sign * _axisMask;
 
         _itemWidgetsPool.ReturnWidget(widget);
         _widgets.Remove(widget);
