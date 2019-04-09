@@ -39,7 +39,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     void Reset()
     {
-        _speedCoef = 13f;
+        _speedCoef = 15f;
         _inertiaCoef = 3f;
         _elasticityCoef = 0.5f;
     }
@@ -62,7 +62,8 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             return;
 
         Vector2 delta = GetDeltaPosition(eventData);
-        _lastDelta = delta;
+        if (CheckVectorMagnitude(delta))
+            _lastDelta = delta;
 
         OnScroll(delta);
     }
