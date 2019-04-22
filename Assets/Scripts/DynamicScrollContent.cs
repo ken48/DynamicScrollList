@@ -8,17 +8,17 @@ using UnityEngine.UI;
 public class DynamicScrollContent : MonoBehaviour
 {
     // Todo: direction (swap)
-    static readonly Dictionary<ViewportEdge, Func<Rect, Vector2>> RectEdgePosition = new Dictionary<ViewportEdge, Func<Rect, Vector2>>
+    static readonly Dictionary<DynamicScrollDescription.Edge, Func<Rect, Vector2>> RectEdgePosition = new Dictionary<DynamicScrollDescription.Edge, Func<Rect, Vector2>>
     {
-        { ViewportEdge.Head, r => r.min },
-        { ViewportEdge.Tail, r => r.max },
+        { DynamicScrollDescription.Edge.Head, r => r.min },
+        { DynamicScrollDescription.Edge.Tail, r => r.max },
     };
 
     // Todo: direction (sign)
-    static readonly Dictionary<ViewportEdge, Func<Vector2, Vector2, bool>> ViewportCheckEdge = new Dictionary<ViewportEdge, Func<Vector2, Vector2, bool>>
+    static readonly Dictionary<DynamicScrollDescription.Edge, Func<Vector2, Vector2, bool>> ViewportCheckEdge = new Dictionary<DynamicScrollDescription.Edge, Func<Vector2, Vector2, bool>>
     {
-        { ViewportEdge.Head, (v, p) => DynamicScrollHelpers.GetVectorComponent(v) < DynamicScrollHelpers.GetVectorComponent(p) },
-        { ViewportEdge.Tail, (v, p) => DynamicScrollHelpers.GetVectorComponent(v) > DynamicScrollHelpers.GetVectorComponent(p) },
+        { DynamicScrollDescription.Edge.Head, (v, p) => DynamicScrollHelpers.GetVectorComponent(v) < DynamicScrollHelpers.GetVectorComponent(p) },
+        { DynamicScrollDescription.Edge.Tail, (v, p) => DynamicScrollHelpers.GetVectorComponent(v) > DynamicScrollHelpers.GetVectorComponent(p) },
     };
 
     [SerializeField]
@@ -28,23 +28,23 @@ public class DynamicScrollContent : MonoBehaviour
     RectTransform _viewport;
     DynamicScrollItemWidgetsPool _itemWidgetsPool;
     List<IDynamicScrollItemWidget> _widgets;
-    Dictionary<ViewportEdge, Vector2> _edgesLastPositions;
-    Vector2 _axisMask;
+    Dictionary<DynamicScrollDescription.Edge, Vector2> _edgesLastPositions;
+    DynamicScrollDescription.Axis _axis;
     Vector2 _spacingVector;
 
-    public void Init(IDynamicScrollItemWidgetProvider itemWidgetProvider, RectTransform viewport, Vector2 axisMask)
+    public void Init(IDynamicScrollItemWidgetProvider itemWidgetProvider, RectTransform viewport, DynamicScrollDescription.Axis axis)
     {
         _node = (RectTransform)transform;
         _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, _node);
         _viewport = viewport;
-        _axisMask = axisMask;
-        _spacingVector = _spacing * axisMask;
+        _axis = axis;
+        _spacingVector = DynamicScrollDescription.AxisMasks[axis] * _spacing;
 
         _widgets = new List<IDynamicScrollItemWidget>();
-        _edgesLastPositions = new Dictionary<ViewportEdge, Vector2>
+        _edgesLastPositions = new Dictionary<DynamicScrollDescription.Edge, Vector2>
         {
-            { ViewportEdge.Head, Vector2.zero },
-            { ViewportEdge.Tail, -_spacingVector },
+            { DynamicScrollDescription.Edge.Head, Vector2.zero },
+            { DynamicScrollDescription.Edge.Tail, -_spacingVector },
         };
     }
 
@@ -58,59 +58,59 @@ public class DynamicScrollContent : MonoBehaviour
         _node.anchoredPosition += delta;
     }
 
-    public bool CanInflate(ViewportEdge edge, Rect viewportWorldRect)
+    public bool CanInflate(DynamicScrollDescription.Edge edge, Rect viewportWorldRect)
     {
-        int sign = DynamicScrollViewport.InflationSigns[edge];
+        int sign = DynamicScrollDescription.EdgeInflationSigns[edge];
         Vector2 startPos = _node.TransformPoint(_edgesLastPositions[edge] + _spacingVector * sign);
         return ViewportCheckEdge[edge](RectEdgePosition[edge](viewportWorldRect) * _axisMask, startPos * _axisMask);
     }
 
-    public void Inflate(ViewportEdge edge, IDynamicScrollItem item)
+    public void Inflate(DynamicScrollDescription.Edge edge, IDynamicScrollItem item)
     {
         IDynamicScrollItemWidget widget = _itemWidgetsPool.GetWidget(item);
         widget.Fill(item);
         LayoutRebuilder.ForceRebuildLayoutImmediate(widget.rectTransform);
         RectTransform widgetRectTransform = widget.rectTransform;
 
-        float sign = DynamicScrollViewport.InflationSigns[edge];
+        float sign = DynamicScrollDescription.EdgeInflationSigns[edge];
         Vector2 newPosition = _edgesLastPositions[edge] + (widget.rectTransform.rect.size + _spacingVector) * sign * _axisMask;
         _edgesLastPositions[edge] = newPosition;
         widgetRectTransform.anchoredPosition = newPosition;
 
         switch (edge)
         {
-            case ViewportEdge.Head:
+            case DynamicScrollDescription.Edge.Head:
                 _widgets.Insert(0, widget);
                 break;
 
-            case ViewportEdge.Tail:
+            case DynamicScrollDescription.Edge.Tail:
                 _widgets.Add(widget);
                 widgetRectTransform.anchoredPosition -= widget.rectTransform.rect.size * _axisMask;
                 break;
         }
     }
 
-    public bool CanDeflate(ViewportEdge edge, Rect viewportWorldRect)
+    public bool CanDeflate(DynamicScrollDescription.Edge edge, Rect viewportWorldRect)
     {
         return !IsEmpty() && !DynamicScrollHelpers.GetWorldRect(GetEdgeWidget(edge).rectTransform).Overlaps(viewportWorldRect);
     }
 
-    public void Deflate(ViewportEdge edge)
+    public void Deflate(DynamicScrollDescription.Edge edge)
     {
         IDynamicScrollItemWidget widget = GetEdgeWidget(edge);
-        float sign = -DynamicScrollViewport.InflationSigns[edge];
+        float sign = -DynamicScrollDescription.EdgeInflationSigns[edge];
         _edgesLastPositions[edge] += (widget.rectTransform.rect.size + _spacingVector) * sign * _axisMask;
 
         _itemWidgetsPool.ReturnWidget(widget);
         _widgets.Remove(widget);
     }
 
-    public Vector2 GetEdgeDelta(ViewportEdge edge)
+    public Vector2 GetEdgeDelta(DynamicScrollDescription.Edge edge)
     {
         Rect viewportRect = _viewport.rect;
         Vector2 result = -_edgesLastPositions[edge] - _node.anchoredPosition + RectEdgePosition[edge](viewportRect) + viewportRect.size * 0.5f;
-        float resultF = DynamicScrollHelpers.GetVectorComponent(result * _axisMask);
-        if ((int)Mathf.Sign(resultF) != DynamicScrollViewport.InflationSigns[edge])
+        float resultFloat = DynamicScrollHelpers.GetVectorComponent(result, _axis);
+        if ((int)Mathf.Sign(resultFloat) != DynamicScrollDescription.EdgeInflationSigns[edge])
             return Vector2.zero;
         return result;
     }
@@ -120,8 +120,8 @@ public class DynamicScrollContent : MonoBehaviour
         return _widgets.Count == 0;
     }
 
-    IDynamicScrollItemWidget GetEdgeWidget(ViewportEdge edge)
+    IDynamicScrollItemWidget GetEdgeWidget(DynamicScrollDescription.Edge edge)
     {
-        return _widgets[edge == ViewportEdge.Head ? 0 : _widgets.Count - 1];
+        return _widgets[edge == DynamicScrollDescription.Edge.Head ? 0 : _widgets.Count - 1];
     }
 }

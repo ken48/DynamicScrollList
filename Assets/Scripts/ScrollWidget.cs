@@ -5,22 +5,12 @@ using UnityEngine.EventSystems;
 
 public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    enum Axis
-    {
-        Horizontal,
-        Vertical,
-    }
-
-    static readonly Dictionary<Axis, Vector2> AxisMasks = new Dictionary<Axis, Vector2>
-    {
-        { Axis.Horizontal, Vector2.right },
-        { Axis.Vertical, Vector2.up },
-    };
-
     public event Action<Vector2> onScroll;
 
+    public DynamicScrollDescription.Axis axis => _axis;
+
     [SerializeField]
-    Axis _axis;
+    DynamicScrollDescription.Axis _axis;
     [SerializeField]
     RectTransform _viewport;
     [SerializeField]
@@ -46,8 +36,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_viewport, eventData.position,
-            eventData.pressEventCamera, out _startPosition))
+        if (GetLocalPosition(eventData, out _startPosition))
         {
             _isDragging = true;
             _inertiaVelocity = Vector2.zero;
@@ -82,22 +71,17 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void SetEdgeDelta(Vector2 edgesDelta)
     {
-        Vector2 edgesDeltaAxis = Vector2.Scale(edgesDelta, AxisMasks[_axis]);
+        Vector2 edgesDeltaAxis = Vector2.Scale(edgesDelta, DynamicScrollDescription.AxisMasks[_axis]);
         float edgesDeltaAxisSqr = edgesDeltaAxis.sqrMagnitude;
         if (_isDragging)
         {
-            float viewportLengthSqr = Vector2.Scale(_viewport.rect.size, AxisMasks[_axis]).sqrMagnitude;
+            float viewportLengthSqr = Vector2.Scale(_viewport.rect.size, DynamicScrollDescription.AxisMasks[_axis]).sqrMagnitude;
             _elasticity = 1f - Mathf.Clamp01(edgesDeltaAxisSqr / viewportLengthSqr);
         }
 
         _edgeDelta = edgesDeltaAxis * _elasticityCoef;
         if (edgesDeltaAxisSqr > 0f)
             _inertiaVelocity = Vector2.zero;
-    }
-
-    public Vector2 GetAxisMask()
-    {
-        return AxisMasks[_axis];
     }
 
     void LateUpdate()
@@ -121,14 +105,20 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     Vector2 GetDeltaPosition(PointerEventData eventData)
     {
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(_viewport, eventData.position, eventData.pressEventCamera,
-            out Vector2 finishPosition);
-        var delta = Vector2.Scale(finishPosition - _startPosition, AxisMasks[_axis]);
+        Vector2 finishPosition;
+        GetLocalPosition(eventData, out finishPosition);
+        var delta = Vector2.Scale(finishPosition - _startPosition, DynamicScrollDescription.AxisMasks[_axis]);
         _startPosition = finishPosition;
 
         if (_elasticity < 1f)
             delta *= _elasticity * _elasticityCoef;
         return delta;
+    }
+
+    bool GetLocalPosition(PointerEventData eventData, out Vector2 position)
+    {
+        return RectTransformUtility.ScreenPointToLocalPointInRectangle(_viewport,
+            eventData.position, eventData.pressEventCamera, out position);
     }
 
     static bool CheckVectorMagnitude(Vector2 v)

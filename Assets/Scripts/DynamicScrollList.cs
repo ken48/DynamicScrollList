@@ -25,9 +25,10 @@ public class DynamicScrollList : MonoBehaviour
     {
         _itemProvider = itemProvider;
         _dynamicViewport = new DynamicScrollViewport(i => _itemProvider.GetItemByIndex(i) != null);
-        _dynamicContent.Init(itemWidgetProvider, _viewportNode, _scrollWidget.GetAxisMask());
+        _dynamicContent.Init(itemWidgetProvider, _viewportNode);
 
         // Initial refresh
+        // Todo: use common approach depending in startEdge (if head then -1, else +1)
         OnScroll(-Vector2.one * Mathf.Epsilon);
     }
 
@@ -48,14 +49,14 @@ public class DynamicScrollList : MonoBehaviour
         Rect viewportWorldRect = DynamicScrollHelpers.GetWorldRect(_viewportNode);
 
         // Select non zero vector component
-        float deltaFloat = DynamicScrollHelpers.GetVectorComponent(delta * _scrollWidget.GetAxisMask());
-        ViewportEdge inflationEdge = deltaFloat > 0f ? ViewportEdge.Head : ViewportEdge.Tail;
-        while (TryDeflate(DynamicScrollViewport.OppositeEdges[inflationEdge], viewportWorldRect));
+        float deltaFloat = DynamicScrollHelpers.GetVectorComponent(delta, _scrollWidget.axis);
+        DynamicScrollDescription.Edge inflationEdge = deltaFloat > 0f ? DynamicScrollDescription.Edge.Head : DynamicScrollDescription.Edge.Tail;
+        while (TryDeflate(DynamicScrollDescription.OppositeEdges[inflationEdge], viewportWorldRect));
         while (TryInflate(inflationEdge, viewportWorldRect));
         _scrollWidget.SetEdgeDelta(GetEdgeDelta());
     }
 
-    bool TryInflate(ViewportEdge edge, Rect viewportWorldRect)
+    bool TryInflate(DynamicScrollDescription.Edge edge, Rect viewportWorldRect)
     {
         if (!_dynamicContent.CanInflate(edge, viewportWorldRect) ||
             !_dynamicViewport.Inflate(edge))
@@ -67,11 +68,11 @@ public class DynamicScrollList : MonoBehaviour
         _dynamicContent.Inflate(edge, _itemProvider.GetItemByIndex(index));
 
         // Remove unnecessary elements if the list was scrolled too much on this frame
-        TryDeflate(DynamicScrollViewport.OppositeEdges[edge], viewportWorldRect);
+        TryDeflate(DynamicScrollDescription.OppositeEdges[edge], viewportWorldRect);
         return true;
     }
 
-    bool TryDeflate(ViewportEdge edge, Rect viewportWorldRect)
+    bool TryDeflate(DynamicScrollDescription.Edge edge, Rect viewportWorldRect)
     {
         if (!_dynamicContent.CanDeflate(edge, viewportWorldRect))
             return false;
@@ -82,40 +83,22 @@ public class DynamicScrollList : MonoBehaviour
 
     Vector2 GetEdgeDelta()
     {
-        foreach (var et in DynamicScrollHelpers.GetViewportEdges())
-            if (_dynamicViewport.CheckEdge(et))
-                return _dynamicContent.GetEdgeDelta(et);
+        foreach (DynamicScrollDescription.Edge edge in GetEdges())
+            if (_dynamicViewport.CheckEdge(edge))
+                return _dynamicContent.GetEdgeDelta(edge);
         return Vector2.zero;
     }
-}
 
-//
-// Helpers
-//
+    //
+    // Helpers
+    //
 
-public static class DynamicScrollHelpers
-{
-    static ViewportEdge[] _viewportEdges;
+    static DynamicScrollDescription.Edge[] _edges;
 
-    public static ViewportEdge[] GetViewportEdges()
+    static DynamicScrollDescription.Edge[] GetEdges()
     {
-        if (_viewportEdges == null)
-            _viewportEdges = (ViewportEdge[])Enum.GetValues(typeof(ViewportEdge));
-        return _viewportEdges;
-    }
-
-    // Todo: make it more explicitly
-    public static float GetVectorComponent(Vector2 v)
-    {
-        // One of them is always zero
-        return v.x + v.y;
-    }
-
-    public static Rect GetWorldRect(RectTransform rectTransform)
-    {
-        Rect rect = rectTransform.rect;
-        Vector2 worldRectMin = rectTransform.TransformPoint(rect.min);
-        Vector2 worldRectMax = rectTransform.TransformPoint(rect.max);
-        return Rect.MinMaxRect(worldRectMin.x, worldRectMin.y, worldRectMax.x, worldRectMax.y);
+        if (_edges == null)
+            _edges = (DynamicScrollDescription.Edge[])Enum.GetValues(typeof(DynamicScrollDescription.Edge));
+        return _edges;
     }
 }
