@@ -128,6 +128,14 @@ public class DynamicScrollContent : MonoBehaviour
 
     IDynamicScrollItemWidget GetEdgeWidget(DynamicScrollDescription.Edge edge)
     {
-        return _widgets[edge == DynamicScrollDescription.Edge.Head ? 0 : _widgets.Count - 1];
+        switch (edge)
+        {
+            case DynamicScrollDescription.Edge.Head:
+                return _widgets[0];
+            case DynamicScrollDescription.Edge.Tail:
+                return _widgets[_widgets.Count - 1];
+            default:
+                throw new Exception("Unhandled edge type " + edge);
+        }
     }
 }

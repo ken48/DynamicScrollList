@@ -51,7 +51,8 @@ public class DynamicScrollList : MonoBehaviour
 
         var directionSign = (int)Mathf.Sign(DynamicScrollHelpers.GetVectorComponent(delta, _scrollWidget.axis));
         int inflationSign = -directionSign;
-        DynamicScrollDescription.Edge inflationEdge = DynamicScrollDescription.EdgeInflationSigns.FirstOrDefault(kv => kv.Value == inflationSign).Key;
+        DynamicScrollDescription.Edge inflationEdge = DynamicScrollDescription.EdgeInflationSigns.FirstOrDefault(kv =>
+            kv.Value == inflationSign).Key;
 
         while (TryDeflate(DynamicScrollDescription.OppositeEdges[inflationEdge], viewportWorldRect));
         while (TryInflate(inflationEdge, viewportWorldRect));

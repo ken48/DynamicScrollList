@@ -120,8 +120,8 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             eventData.position, eventData.pressEventCamera, out position);
     }
 
-    static bool CheckVectorMagnitude(Vector2 v)
+    static bool CheckVectorMagnitude(Vector2 vector)
     {
-        return v.sqrMagnitude >= 1e-6;
+        return vector.sqrMagnitude >= 1e-6;
     }
 }
