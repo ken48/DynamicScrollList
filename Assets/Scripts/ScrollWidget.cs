@@ -71,16 +71,16 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void SetEdgeDelta(Vector2 edgesDelta)
     {
-        Vector2 edgesDeltaAxis = Vector2.Scale(edgesDelta, DynamicScrollDescription.AxisMasks[_axis]);
-        float edgesDeltaAxisSqr = edgesDeltaAxis.sqrMagnitude;
+        float edgesDeltaAxis = DynamicScrollHelpers.GetVectorComponent(edgesDelta, _axis);
+        float edgesDeltaAxisAbs = Mathf.Abs(edgesDeltaAxis);
         if (_isDragging)
         {
-            float viewportLengthSqr = Vector2.Scale(_viewport.rect.size, DynamicScrollDescription.AxisMasks[_axis]).sqrMagnitude;
-            _elasticity = 1f - Mathf.Clamp01(edgesDeltaAxisSqr / viewportLengthSqr);
+            float viewportLengthAxis = DynamicScrollHelpers.GetVectorComponent(_viewport.rect.size, _axis);
+            _elasticity = 1f - Mathf.Clamp01(edgesDeltaAxisAbs / viewportLengthAxis);
         }
 
-        _edgeDelta = edgesDeltaAxis * _elasticityCoef;
-        if (edgesDeltaAxisSqr > 0f)
+        _edgeDelta = DynamicScrollDescription.AxisMasks[_axis] * edgesDeltaAxis * _elasticityCoef;
+        if (edgesDeltaAxisAbs > 0f)
             _inertiaVelocity = Vector2.zero;
     }
 
@@ -105,14 +105,13 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     Vector2 GetDeltaPosition(PointerEventData eventData)
     {
-        Vector2 finishPosition;
-        GetLocalPosition(eventData, out finishPosition);
-        var delta = Vector2.Scale(finishPosition - _startPosition, DynamicScrollDescription.AxisMasks[_axis]);
+        GetLocalPosition(eventData, out Vector2 finishPosition);
+        Vector2 deltaAxis = (finishPosition - _startPosition) * DynamicScrollDescription.AxisMasks[_axis];
         _startPosition = finishPosition;
 
         if (_elasticity < 1f)
-            delta *= _elasticity * _elasticityCoef;
-        return delta;
+            deltaAxis *= _elasticity * _elasticityCoef;
+        return deltaAxis;
     }
 
     bool GetLocalPosition(PointerEventData eventData, out Vector2 position)
