@@ -73,10 +73,15 @@ public static class DynamicScrollHelpers
 {
     public static float GetVectorComponent(Vector2 vector, DynamicScrollDescription.Axis axis)
     {
-        Vector2 maskedVector = vector * DynamicScrollDescription.AxisMasks[axis];
-
-        // One of them is always zero
-        return maskedVector.x + maskedVector.y;
+        switch (axis)
+        {
+            case DynamicScrollDescription.Axis.Horizontal:
+                return vector.x;
+            case DynamicScrollDescription.Axis.Vertical:
+                return vector.y;
+            default:
+                throw new Exception("Unhandled axis type " + axis);
+        }
     }
 
     public static Rect GetWorldRect(RectTransform rectTransform)
