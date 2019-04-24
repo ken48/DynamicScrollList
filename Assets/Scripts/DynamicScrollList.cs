@@ -14,6 +14,8 @@ public class DynamicScrollList : MonoBehaviour
     [SerializeField]
     RectTransform _contentNode;
     [SerializeField]
+    DynamicScrollDescription.Edge _startEdge;
+    [SerializeField]
     float _spacing;
 
     IDynamicScrollItemProvider _itemProvider;
@@ -24,7 +26,8 @@ public class DynamicScrollList : MonoBehaviour
     {
         _itemProvider = itemProvider;
         _dynamicViewport = new DynamicScrollViewport(i => _itemProvider.GetItemByIndex(i) != null);
-        _dynamicContent = new DynamicScrollContent(_viewportNode, _contentNode, itemWidgetProvider, _scrollWidget.axis, _spacing);
+        _dynamicContent = new DynamicScrollContent(_viewportNode, _contentNode, itemWidgetProvider,
+            _scrollWidget.axis, _startEdge, _spacing);
 
         // Initial refresh
         // Todo: use common approach depending on startEdge (if head then -1, else +1)

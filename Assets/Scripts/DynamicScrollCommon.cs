@@ -10,8 +10,8 @@ public static class DynamicScrollDescription
 {
     public enum Axis
     {
-        Horizontal,
-        Vertical,
+        X,
+        Y,
     }
 
     public enum Edge
@@ -26,6 +26,12 @@ public static class DynamicScrollDescription
         { Edge.Tail, Edge.Head },
     };
 
+    public static readonly Dictionary<Axis, Axis> OrthoAxes = new Dictionary<Axis, Axis>
+    {
+        { Axis.X, Axis.Y },
+        { Axis.Y, Axis.X },
+    };
+
     public static readonly Dictionary<Edge, int> EdgeInflationSigns = new Dictionary<Edge, int>
     {
         { Edge.Head, -1 },
@@ -34,8 +40,8 @@ public static class DynamicScrollDescription
 
     public static readonly Dictionary<Axis, Vector2> AxisMasks = new Dictionary<Axis, Vector2>
     {
-        { Axis.Horizontal, Vector2.right },
-        { Axis.Vertical, Vector2.up },
+        { Axis.X, Vector2.right },
+        { Axis.Y, Vector2.up },
     };
 }
 
@@ -75,9 +81,9 @@ public static class DynamicScrollHelpers
     {
         switch (axis)
         {
-            case DynamicScrollDescription.Axis.Horizontal:
+            case DynamicScrollDescription.Axis.X:
                 return vector.x;
-            case DynamicScrollDescription.Axis.Vertical:
+            case DynamicScrollDescription.Axis.Y:
                 return vector.y;
             default:
                 throw new Exception("Unhandled axis type " + axis);

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Todo: set pivots and anchors in code for widgets depends on it's growth direction and axis
-
 public class DynamicScrollContent
 {
     // Todo: direction (swap)
@@ -23,21 +21,30 @@ public class DynamicScrollContent
         { DynamicScrollDescription.Edge.Tail, (v, p, a) => DynamicScrollHelpers.GetVectorComponent(v, a) > DynamicScrollHelpers.GetVectorComponent(p, a) },
     };
 
+    static readonly Dictionary<DynamicScrollDescription.Edge, Vector2> AnchorBases =
+        new Dictionary<DynamicScrollDescription.Edge, Vector2>
+    {
+        { DynamicScrollDescription.Edge.Head, Vector2.zero },
+        { DynamicScrollDescription.Edge.Tail, Vector2.one },
+    };
+
     RectTransform _viewport;
     RectTransform _node;
     DynamicScrollItemWidgetsPool _itemWidgetsPool;
     List<IDynamicScrollItemWidget> _widgets;
     Dictionary<DynamicScrollDescription.Edge, Vector2> _edgesLastPositions;
     DynamicScrollDescription.Axis _axis;
+    DynamicScrollDescription.Edge _startEdge;
     Vector2 _spacingVector;
 
     public DynamicScrollContent(RectTransform viewport, RectTransform node, IDynamicScrollItemWidgetProvider itemWidgetProvider,
-        DynamicScrollDescription.Axis axis, float spacing)
+        DynamicScrollDescription.Axis axis, DynamicScrollDescription.Edge startEdge, float spacing)
     {
         _viewport = viewport;
         _node = node;
         _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, _node);
         _axis = axis;
+        _startEdge = startEdge;
         _spacingVector = DynamicScrollDescription.AxisMasks[axis] * spacing;
 
         _widgets = new List<IDynamicScrollItemWidget>();
@@ -46,6 +53,8 @@ public class DynamicScrollContent
             { DynamicScrollDescription.Edge.Head, Vector2.zero },
             { DynamicScrollDescription.Edge.Tail, -_spacingVector },
         };
+
+        SetPivotAndAnchors(_node);
     }
 
     public void Shutdown()
@@ -69,8 +78,10 @@ public class DynamicScrollContent
     {
         IDynamicScrollItemWidget widget = _itemWidgetsPool.GetWidget(item);
         widget.Fill(item);
-        LayoutRebuilder.ForceRebuildLayoutImmediate(widget.rectTransform);
+
         RectTransform widgetRectTransform = widget.rectTransform;
+        SetPivotAndAnchors(widgetRectTransform);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(widget.rectTransform);
 
         int sign = DynamicScrollDescription.EdgeInflationSigns[edge];
         AddEdgeLastPosition(widget.rectTransform, sign, edge);
@@ -139,5 +150,18 @@ public class DynamicScrollContent
             default:
                 throw new Exception("Unhandled edge type " + edge);
         }
+    }
+
+    void SetPivotAndAnchors(RectTransform rectTransform)
+    {
+        Vector2 pivotBase = Vector2.one * 0.5f;
+        Vector2 axisMask = DynamicScrollDescription.AxisMasks[_axis];
+        Vector2 orthoAxisMask = DynamicScrollDescription.AxisMasks[DynamicScrollDescription.OrthoAxes[_axis]];
+        Vector2 baseVector = AnchorBases[_startEdge];
+        Vector2 tailBase = AnchorBases[DynamicScrollDescription.Edge.Tail];
+
+        rectTransform.anchorMin = baseVector * axisMask;
+        rectTransform.anchorMax = rectTransform.anchorMin + tailBase * orthoAxisMask;
+        rectTransform.pivot = baseVector * axisMask + pivotBase * orthoAxisMask;
     }
 }
