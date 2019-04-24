@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -84,6 +83,12 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             _inertiaVelocity = Vector2.zero;
     }
 
+    void OnScroll(Vector2 delta)
+    {
+        if (CheckVectorMagnitude(delta))
+            onScroll?.Invoke(delta);
+    }
+
     void LateUpdate()
     {
         if (_isDragging || (!CheckVectorMagnitude(_inertiaVelocity) && !CheckVectorMagnitude(_edgeDelta)))
@@ -97,11 +102,9 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         OnScroll(delta);
     }
 
-    void OnScroll(Vector2 delta)
-    {
-        if (CheckVectorMagnitude(delta))
-            onScroll?.Invoke(delta);
-    }
+    //
+    // Helpers
+    //
 
     Vector2 GetDeltaPosition(PointerEventData eventData)
     {

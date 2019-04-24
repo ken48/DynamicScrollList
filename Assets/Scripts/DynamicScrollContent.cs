@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 // Todo: set pivots and anchors in code for widgets depends on it's growth direction and axis
 
-public class DynamicScrollContent : MonoBehaviour
+public class DynamicScrollContent
 {
     // Todo: direction (swap)
     static readonly Dictionary<DynamicScrollDescription.Edge, Func<Rect, Vector2>> RectEdgePosition =
@@ -23,24 +23,22 @@ public class DynamicScrollContent : MonoBehaviour
         { DynamicScrollDescription.Edge.Tail, (v, p, a) => DynamicScrollHelpers.GetVectorComponent(v, a) > DynamicScrollHelpers.GetVectorComponent(p, a) },
     };
 
-    [SerializeField]
-    float _spacing;
-
-    RectTransform _node;
     RectTransform _viewport;
+    RectTransform _node;
     DynamicScrollItemWidgetsPool _itemWidgetsPool;
     List<IDynamicScrollItemWidget> _widgets;
     Dictionary<DynamicScrollDescription.Edge, Vector2> _edgesLastPositions;
     DynamicScrollDescription.Axis _axis;
     Vector2 _spacingVector;
 
-    public void Init(IDynamicScrollItemWidgetProvider itemWidgetProvider, RectTransform viewport, DynamicScrollDescription.Axis axis)
+    public DynamicScrollContent(RectTransform viewport, RectTransform node, IDynamicScrollItemWidgetProvider itemWidgetProvider,
+        DynamicScrollDescription.Axis axis, float spacing)
     {
-        _node = (RectTransform)transform;
-        _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, _node);
         _viewport = viewport;
+        _node = node;
+        _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, _node);
         _axis = axis;
-        _spacingVector = DynamicScrollDescription.AxisMasks[axis] * _spacing;
+        _spacingVector = DynamicScrollDescription.AxisMasks[axis] * spacing;
 
         _widgets = new List<IDynamicScrollItemWidget>();
         _edgesLastPositions = new Dictionary<DynamicScrollDescription.Edge, Vector2>
@@ -120,6 +118,10 @@ public class DynamicScrollContent : MonoBehaviour
         Vector2 axisMask = DynamicScrollDescription.AxisMasks[_axis];
         _edgesLastPositions[edge] += (widgetRectTransform.rect.size + _spacingVector) * sign * axisMask;
     }
+
+    //
+    // Helpers
+    //
 
     bool IsEmpty()
     {
