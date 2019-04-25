@@ -4,6 +4,12 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
+
+// Todo: DIVIDE Data viewport and widget viewport.
+// вьюпорт данных всегда одинаковый по сути от начала к концу (begin - end)
+// вьюпорт верстки должен быть относительным (верх/низ право/лево)... Фиг знает..
+
+
 public class DynamicScrollContent : MonoBehaviour
 {
     // Todo: direction (swap)

@@ -77,6 +77,8 @@ public interface IDynamicScrollItemWidgetProvider
 
 public static class DynamicScrollHelpers
 {
+    // Todo: move to DynamicContent somehow... The problem is optimization only
+    // How not to calculate this each time
     public static Rect GetWorldRect(RectTransform rectTransform)
     {
         Rect rect = rectTransform.rect;
