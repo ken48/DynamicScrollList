@@ -77,19 +77,6 @@ public interface IDynamicScrollItemWidgetProvider
 
 public static class DynamicScrollHelpers
 {
-    public static float GetVectorComponent(Vector2 vector, DynamicScrollDescription.Axis axis)
-    {
-        switch (axis)
-        {
-            case DynamicScrollDescription.Axis.X:
-                return vector.x;
-            case DynamicScrollDescription.Axis.Y:
-                return vector.y;
-            default:
-                throw new Exception("Unhandled axis type " + axis);
-        }
-    }
-
     public static Rect GetWorldRect(RectTransform rectTransform)
     {
         Rect rect = rectTransform.rect;

@@ -70,16 +70,16 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void SetEdgeDelta(Vector2 edgesDelta)
     {
-        float edgesDeltaAxis = DynamicScrollHelpers.GetVectorComponent(edgesDelta, _axis);
-        float edgesDeltaAxisAbs = Mathf.Abs(edgesDeltaAxis);
+        Vector2 edgesDeltaAxis = edgesDelta * DynamicScrollDescription.AxisMasks[_axis];
+        float edgesDeltaAxisSqrMagnitude = edgesDeltaAxis.sqrMagnitude;
         if (_isDragging)
         {
-            float viewportLengthAxis = DynamicScrollHelpers.GetVectorComponent(_viewport.rect.size, _axis);
-            _elasticity = 1f - Mathf.Clamp01(edgesDeltaAxisAbs / viewportLengthAxis);
+            float viewportAxisSqrMagnitude = (_viewport.rect.size * DynamicScrollDescription.AxisMasks[_axis]).sqrMagnitude;
+            _elasticity = 1f - Mathf.Clamp01(edgesDeltaAxisSqrMagnitude / viewportAxisSqrMagnitude);
         }
 
-        _edgeDelta = DynamicScrollDescription.AxisMasks[_axis] * edgesDeltaAxis * _elasticityCoef;
-        if (edgesDeltaAxisAbs > 0f)
+        _edgeDelta = edgesDeltaAxis * _elasticityCoef;
+        if (edgesDeltaAxisSqrMagnitude > 0f)
             _inertiaVelocity = Vector2.zero;
     }
 

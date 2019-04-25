@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using UnityEngine;
 
 // Todo: adding, deleting, changing of element on fly
@@ -12,26 +11,19 @@ public class DynamicScrollList : MonoBehaviour
     [SerializeField]
     RectTransform _viewportNode;
     [SerializeField]
-    RectTransform _contentNode;
-    [SerializeField]
-    DynamicScrollDescription.Edge _startEdge;
-    [SerializeField]
-    float _spacing;
+    DynamicScrollContent _dynamicContent;
 
     IDynamicScrollItemProvider _itemProvider;
     DynamicScrollViewport _dynamicViewport;
-    DynamicScrollContent _dynamicContent;
 
     public void Init(IDynamicScrollItemProvider itemProvider, IDynamicScrollItemWidgetProvider itemWidgetProvider)
     {
         _itemProvider = itemProvider;
         _dynamicViewport = new DynamicScrollViewport(i => _itemProvider.GetItemByIndex(i) != null);
-        _dynamicContent = new DynamicScrollContent(_viewportNode, _contentNode, itemWidgetProvider,
-            _scrollWidget.axis, _startEdge, _spacing);
+        _dynamicContent.Init(itemWidgetProvider, _scrollWidget.axis);
 
         // Initial refresh
-        int directionSign = DynamicScrollDescription.EdgeInflationSigns[_startEdge];
-        OnScroll(Vector2.one * directionSign * Mathf.Epsilon);
+        HandleScroll(DynamicScrollDescription.Edge.Tail);
 
         _scrollWidget.onScroll += OnScroll;
     }
@@ -44,18 +36,15 @@ public class DynamicScrollList : MonoBehaviour
 
     void OnScroll(Vector2 delta)
     {
-        _dynamicContent.Move(delta);
+        DynamicScrollDescription.Edge inflationEdge = _dynamicContent.Move(delta);
+        HandleScroll(inflationEdge);
+    }
 
+    void HandleScroll(DynamicScrollDescription.Edge inflationEdge)
+    {
         Rect viewportWorldRect = DynamicScrollHelpers.GetWorldRect(_viewportNode);
-
-        float directionSign = Mathf.Sign(DynamicScrollHelpers.GetVectorComponent(delta, _scrollWidget.axis));
-        var inflationSign = -(int)directionSign;
-        DynamicScrollDescription.Edge inflationEdge = DynamicScrollDescription.EdgeInflationSigns.FirstOrDefault(kv =>
-            kv.Value == inflationSign).Key;
-
         while (TryDeflate(DynamicScrollDescription.OppositeEdges[inflationEdge], viewportWorldRect));
         while (TryInflate(inflationEdge, viewportWorldRect));
-
         _scrollWidget.SetEdgeDelta(GetEdgeDelta());
     }
 
@@ -88,7 +77,7 @@ public class DynamicScrollList : MonoBehaviour
     {
         foreach (DynamicScrollDescription.Edge edge in GetEdges())
             if (_dynamicViewport.CheckEdge(edge))
-                return _dynamicContent.GetEdgeDelta(edge);
+                return _dynamicContent.GetEdgeDelta(_viewportNode, edge);
         return Vector2.zero;
     }
 
