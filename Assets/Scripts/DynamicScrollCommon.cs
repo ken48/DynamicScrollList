@@ -14,6 +14,18 @@ public static class DynamicScrollDescription
         Y,
     }
 
+    public static readonly Dictionary<Axis, Axis> OrthoAxes = new Dictionary<Axis, Axis>
+    {
+        { Axis.X, Axis.Y },
+        { Axis.Y, Axis.X },
+    };
+
+    public static readonly Dictionary<Axis, Vector2> AxisMasks = new Dictionary<Axis, Vector2>
+    {
+        { Axis.X, Vector2.right },
+        { Axis.Y, Vector2.up },
+    };
+
     public enum Edge
     {
         Head,
@@ -26,22 +38,10 @@ public static class DynamicScrollDescription
         { Edge.Tail, Edge.Head },
     };
 
-    public static readonly Dictionary<Axis, Axis> OrthoAxes = new Dictionary<Axis, Axis>
-    {
-        { Axis.X, Axis.Y },
-        { Axis.Y, Axis.X },
-    };
-
     public static readonly Dictionary<Edge, int> EdgeInflationSigns = new Dictionary<Edge, int>
     {
         { Edge.Head, -1 },
         { Edge.Tail, 1 },
-    };
-
-    public static readonly Dictionary<Axis, Vector2> AxisMasks = new Dictionary<Axis, Vector2>
-    {
-        { Axis.X, Vector2.right },
-        { Axis.Y, Vector2.up },
     };
 }
 
