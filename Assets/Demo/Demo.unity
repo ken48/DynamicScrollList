@@ -460,6 +460,7 @@ MonoBehaviour:
   _scrollWidget: {fileID: 1881900227}
   _viewportNode: {fileID: 60072009}
   _contentNode: {fileID: 948494247}
+  _startEdge: 0
   _spacing: 10
 --- !u!1 &2091577112
 GameObject:

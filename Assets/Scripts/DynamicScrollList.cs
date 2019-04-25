@@ -30,8 +30,8 @@ public class DynamicScrollList : MonoBehaviour
             _scrollWidget.axis, _startEdge, _spacing);
 
         // Initial refresh
-        // Todo: use common approach depending on startEdge (if head then -1, else +1)
-        OnScroll(-Vector2.one * Mathf.Epsilon);
+        int directionSign = DynamicScrollDescription.EdgeInflationSigns[_startEdge];
+        OnScroll(Vector2.one * directionSign * Mathf.Epsilon);
 
         _scrollWidget.onScroll += OnScroll;
     }

@@ -51,7 +51,7 @@ public class DynamicScrollContent
         _edgesLastPositions = new Dictionary<DynamicScrollDescription.Edge, Vector2>
         {
             { DynamicScrollDescription.Edge.Head, Vector2.zero },
-            { DynamicScrollDescription.Edge.Tail, -_spacingVector },
+            { DynamicScrollDescription.Edge.Tail, _spacingVector * DynamicScrollDescription.EdgeInflationSigns[_startEdge] },
         };
 
         SetPivotAndAnchors(_node);
