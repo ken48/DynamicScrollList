@@ -101,7 +101,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     Vector2 GetDeltaPosition(PointerEventData eventData)
     {
         GetLocalPosition(eventData, out Vector2 finishPosition);
-        Vector2 delta = (finishPosition - _startPosition);
+        Vector2 delta = finishPosition - _startPosition;
         _startPosition = finishPosition;
 
         if (_elasticity < 1f)
