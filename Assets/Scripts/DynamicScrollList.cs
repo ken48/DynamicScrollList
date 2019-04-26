@@ -20,7 +20,7 @@ public class DynamicScrollList : MonoBehaviour
     {
         _itemProvider = itemProvider;
         _dynamicViewport = new DynamicScrollViewport(i => _itemProvider.GetItemByIndex(i) != null);
-        _dynamicContent.Init(itemWidgetProvider, _scrollWidget.axis);
+        _dynamicContent.Init(itemWidgetProvider);
 
         // Initial refresh
         HandleScroll(DynamicScrollDescription.Edge.Tail);

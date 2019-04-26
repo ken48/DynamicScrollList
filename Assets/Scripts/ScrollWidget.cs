@@ -6,10 +6,6 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 {
     public event Action<Vector2> onScroll;
 
-    public DynamicScrollDescription.Axis axis => _axis;
-
-    [SerializeField]
-    DynamicScrollDescription.Axis _axis;
     [SerializeField]
     RectTransform _viewport;
     [SerializeField]
@@ -68,18 +64,19 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         OnScroll(delta);
     }
 
-    public void SetEdgeDelta(Vector2 edgesDelta)
+    public void SetEdgeDelta(Vector2 edgeDelta)
     {
-        Vector2 edgesDeltaAxis = edgesDelta * DynamicScrollDescription.AxisMasks[_axis];
-        float edgesDeltaAxisSqrMagnitude = edgesDeltaAxis.sqrMagnitude;
+        float edgeDeltaSqrMagnitude = edgeDelta.sqrMagnitude;
         if (_isDragging)
         {
-            float viewportAxisSqrMagnitude = (_viewport.rect.size * DynamicScrollDescription.AxisMasks[_axis]).sqrMagnitude;
-            _elasticity = 1f - Mathf.Clamp01(edgesDeltaAxisSqrMagnitude / viewportAxisSqrMagnitude);
+            Vector2 viewportSize = _viewport.rect.size;
+            float normalizedEdgeDeltaX = Mathf.Abs(edgeDelta.x / viewportSize.x);
+            float normalizedEdgeDeltaY = Mathf.Abs(edgeDelta.y / viewportSize.y);
+            _elasticity = 1f - Mathf.Clamp01(new Vector2(normalizedEdgeDeltaX, normalizedEdgeDeltaY).magnitude);
         }
 
-        _edgeDelta = edgesDeltaAxis * _elasticityCoef;
-        if (edgesDeltaAxisSqrMagnitude > 0f)
+        _edgeDelta = edgeDelta * _elasticityCoef;
+        if (edgeDeltaSqrMagnitude > 0f)
             _inertiaVelocity = Vector2.zero;
     }
 
@@ -91,7 +88,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     void LateUpdate()
     {
-        if (_isDragging || (!CheckVectorMagnitude(_inertiaVelocity) && !CheckVectorMagnitude(_edgeDelta)))
+        if (_isDragging || !CheckVectorMagnitude(_inertiaVelocity) && !CheckVectorMagnitude(_edgeDelta))
             return;
 
         float dt = Time.unscaledDeltaTime;
@@ -109,12 +106,12 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     Vector2 GetDeltaPosition(PointerEventData eventData)
     {
         GetLocalPosition(eventData, out Vector2 finishPosition);
-        Vector2 deltaAxis = (finishPosition - _startPosition) * DynamicScrollDescription.AxisMasks[_axis];
+        Vector2 delta = (finishPosition - _startPosition);
         _startPosition = finishPosition;
 
         if (_elasticity < 1f)
-            deltaAxis *= _elasticity * _elasticityCoef;
-        return deltaAxis;
+            delta *= _elasticity * _elasticityCoef;
+        return delta;
     }
 
     bool GetLocalPosition(PointerEventData eventData, out Vector2 position)
@@ -125,6 +122,6 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     static bool CheckVectorMagnitude(Vector2 vector)
     {
-        return vector.sqrMagnitude >= 1e-6;
+        return vector.sqrMagnitude >= 1e-6f;
     }
 }
