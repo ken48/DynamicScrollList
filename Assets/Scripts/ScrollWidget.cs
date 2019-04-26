@@ -18,7 +18,6 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     Vector2 _startPosition;
     Vector2 _lastDelta;
     Vector2 _inertiaVelocity;
-    Vector2 _edgeDelta;
     bool _isDragging;
     float _elasticity;
 
@@ -35,7 +34,6 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         {
             _isDragging = true;
             _inertiaVelocity = Vector2.zero;
-            _edgeDelta = Vector2.zero;
             _elasticity = 1f;
         }
     }
@@ -66,7 +64,6 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void SetEdgeDelta(Vector2 edgeDelta)
     {
-        float edgeDeltaSqrMagnitude = edgeDelta.sqrMagnitude;
         if (_isDragging)
         {
             Vector2 viewportSize = _viewport.rect.size;
@@ -75,9 +72,8 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             _elasticity = 1f - Mathf.Clamp01(new Vector2(normalizedEdgeDeltaX, normalizedEdgeDeltaY).magnitude);
         }
 
-        _edgeDelta = edgeDelta * _elasticityCoef;
-        if (edgeDeltaSqrMagnitude > 0f)
-            _inertiaVelocity = Vector2.zero;
+        if (edgeDelta.sqrMagnitude > 0f)
+            _inertiaVelocity = edgeDelta * _elasticityCoef;
     }
 
     void OnScroll(Vector2 delta)
@@ -88,12 +84,11 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     void LateUpdate()
     {
-        if (_isDragging || !CheckVectorMagnitude(_inertiaVelocity) && !CheckVectorMagnitude(_edgeDelta))
+        if (_isDragging || !CheckVectorMagnitude(_inertiaVelocity))
             return;
 
         float dt = Time.unscaledDeltaTime;
-        Vector2 totalVelocity = _inertiaVelocity + _edgeDelta;
-        Vector2 delta = totalVelocity * _speedCoef * dt;
+        Vector2 delta = _inertiaVelocity * _speedCoef * dt;
         _inertiaVelocity *= 1f - Mathf.Clamp01(dt * _inertiaCoef);
 
         OnScroll(delta);
