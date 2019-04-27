@@ -1,36 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 
-public class DynamicScrollViewport
+public class DynamicScrollItemViewport
 {
     public enum Edge
     {
-        Head,
-        Tail,
+        Begin,
+        End,
     }
 
     public static readonly Dictionary<Edge, Edge> OppositeEdges = new Dictionary<Edge, Edge>
     {
-        { Edge.Head, Edge.Tail },
-        { Edge.Tail, Edge.Head },
+        { Edge.Begin, Edge.End },
+        { Edge.End, Edge.Begin },
     };
 
     public static readonly Dictionary<Edge, int> EdgeInflationSigns = new Dictionary<Edge, int>
     {
-        { Edge.Head, -1 },
-        { Edge.Tail, 1 },
+        { Edge.Begin, -1 },
+        { Edge.End, 1 },
     };
 
     readonly Func<int, bool> _onCheckItem;
     readonly Dictionary<Edge, int> _itemsIndices;
 
-    public DynamicScrollViewport(Func<int, bool> onCheckItem)
+    public DynamicScrollItemViewport(Func<int, bool> onCheckItem)
     {
         _onCheckItem = onCheckItem;
         _itemsIndices = new Dictionary<Edge, int>
         {
-            { Edge.Head, 0 },
-            { Edge.Tail, -1 },
+            { Edge.Begin, 0 },
+            { Edge.End, -1 },
         };
     }
 
@@ -69,13 +69,13 @@ public class DynamicScrollViewport
 
     bool IsEmpty()
     {
-        return _itemsIndices[Edge.Head] > _itemsIndices[Edge.Tail];
+        return _itemsIndices[Edge.Begin] > _itemsIndices[Edge.End];
     }
 
     void CheckIndices()
     {
-        int headIndex = _itemsIndices[Edge.Head];
-        int tailIndex = _itemsIndices[Edge.Tail];
+        int headIndex = _itemsIndices[Edge.Begin];
+        int tailIndex = _itemsIndices[Edge.End];
         if (headIndex - tailIndex > 1 || tailIndex - headIndex < -1)
             throw new Exception($"Wrong indices: {headIndex} {tailIndex}");
     }
