@@ -23,7 +23,7 @@ public class DynamicScrollList : MonoBehaviour
         _dynamicContent.Init(itemWidgetProvider);
 
         // Initial refresh
-        HandleScroll(DynamicScrollItemViewport.Edge.End);
+        RefreshViewport(DynamicScrollItemViewport.Edge.End);
 
         _scrollWidget.onScroll += OnScroll;
     }
@@ -37,10 +37,10 @@ public class DynamicScrollList : MonoBehaviour
     void OnScroll(Vector2 delta)
     {
         DynamicScrollItemViewport.Edge inflationEdge = _dynamicContent.Move(delta);
-        HandleScroll(inflationEdge);
+        RefreshViewport(inflationEdge);
     }
 
-    void HandleScroll(DynamicScrollItemViewport.Edge inflationEdge)
+    void RefreshViewport(DynamicScrollItemViewport.Edge inflationEdge)
     {
         Rect viewportWorldRect = DynamicScrollHelpers.GetWorldRect(_viewportNode);
         while (TryDeflate(DynamicScrollItemViewport.OppositeEdges[inflationEdge], viewportWorldRect));
