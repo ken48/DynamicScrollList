@@ -76,7 +76,7 @@ public class DynamicScrollItemViewport
     {
         int headIndex = _itemsIndices[Edge.Begin];
         int tailIndex = _itemsIndices[Edge.End];
-        if (headIndex - tailIndex > 1 || tailIndex - headIndex < -1)
+        if (headIndex - tailIndex > 1)
             throw new Exception($"Wrong indices: {headIndex} {tailIndex}");
     }
 }
