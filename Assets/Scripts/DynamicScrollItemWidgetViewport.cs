@@ -4,33 +4,33 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-
-// Todo: DIVIDE Data viewport and widget viewport.
-// вьюпорт данных всегда одинаковый по сути от начала к концу (begin - end)
-// вьюпорт верстки должен быть относительным (верх/низ право/лево)... Фиг знает..
-
-
-public class DynamicScrollContent : MonoBehaviour
+public class DynamicScrollItemWidgetViewport : MonoBehaviour
 {
-    enum Axis
+    enum Edge
     {
-        X,
-        Y,
+        Left,
+        Right,
+        Bottom,
+        Top,
     }
 
-    static readonly Dictionary<Axis, Axis> OrthoAxes = new Dictionary<Axis, Axis>
+    static readonly Dictionary<Edge, Edge> OppositeEdges = new Dictionary<Edge, Edge>
     {
-        { Axis.X, Axis.Y },
-        { Axis.Y, Axis.X },
+        { Edge.Left, Edge.Right },
+        { Edge.Right, Edge.Left },
+        { Edge.Bottom, Edge.Top },
+        { Edge.Top, Edge.Bottom },
     };
 
-    static readonly Dictionary<Axis, Vector2> AxisMasks = new Dictionary<Axis, Vector2>
+    static readonly Dictionary<Edge, Vector2> EdgesMasks = new Dictionary<Edge, Vector2>
     {
-        { Axis.X, Vector2.right },
-        { Axis.Y, Vector2.up },
+        { Edge.Left, Vector2.right },
+        { Edge.Right, Vector2.left },
+        { Edge.Bottom, Vector2.up },
+        { Edge.Top, Vector2.down },
     };
 
-    // Todo: direction (swap)
+    // Todo: new Edges (left, right, bottom, top)
     static readonly Dictionary<DynamicScrollItemViewport.Edge, Func<Rect, Vector2>> RectEdgePosition =
         new Dictionary<DynamicScrollItemViewport.Edge, Func<Rect, Vector2>>
     {
@@ -38,14 +38,15 @@ public class DynamicScrollContent : MonoBehaviour
         { DynamicScrollItemViewport.Edge.End, r => r.max },
     };
 
-    // Todo: direction (sign)
-    static readonly Dictionary<DynamicScrollItemViewport.Edge, Func<Vector2, Vector2, Axis, bool>> ViewportCheckEdge =
-        new Dictionary<DynamicScrollItemViewport.Edge, Func<Vector2, Vector2, Axis, bool>>
+    // Todo: new Edges (left, right, bottom, top)
+    static readonly Dictionary<DynamicScrollItemViewport.Edge, Func<Vector2, Vector2, Edge, bool>> ViewportCheckEdge =
+        new Dictionary<DynamicScrollItemViewport.Edge, Func<Vector2, Vector2, Edge, bool>>
     {
         { DynamicScrollItemViewport.Edge.Begin, (v, p, a) => GetVectorComponent(v, a) < GetVectorComponent(p, a) },
         { DynamicScrollItemViewport.Edge.End, (v, p, a) => GetVectorComponent(v, a) > GetVectorComponent(p, a) },
     };
 
+    // Todo: new Edges (left, right, bottom, top)
     static readonly Dictionary<DynamicScrollItemViewport.Edge, Vector2> AnchorBases =
         new Dictionary<DynamicScrollItemViewport.Edge, Vector2>
     {
@@ -54,9 +55,7 @@ public class DynamicScrollContent : MonoBehaviour
     };
 
     [SerializeField]
-    Axis _axis;
-    [SerializeField]
-    DynamicScrollItemViewport.Edge startEdge;
+    Edge _startEdge;
     [SerializeField]
     float _spacing;
 
@@ -70,13 +69,15 @@ public class DynamicScrollContent : MonoBehaviour
     {
         _node = (RectTransform)transform;
         _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, _node);
-        _spacingVector = AxisMasks[_axis] * _spacing;
+        _spacingVector = EdgesMasks[_startEdge] * _spacing;
 
         _widgets = new List<IDynamicScrollItemWidget>();
+
+        // Todo: new Edges (left, right, bottom, top)
         _edgesLastPositions = new Dictionary<DynamicScrollItemViewport.Edge, Vector2>
         {
             { DynamicScrollItemViewport.Edge.Begin, Vector2.zero },
-            { DynamicScrollItemViewport.Edge.End, _spacingVector * DynamicScrollItemViewport.EdgeInflationSigns[startEdge] },
+            { DynamicScrollItemViewport.Edge.End, _spacingVector },
         };
 
         SetPivotAndAnchors(_node);

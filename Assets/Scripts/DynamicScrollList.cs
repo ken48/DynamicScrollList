@@ -11,7 +11,7 @@ public class DynamicScrollList : MonoBehaviour
     [SerializeField]
     RectTransform _viewportNode;
     [SerializeField]
-    DynamicScrollContent _dynamicContent;
+    DynamicScrollItemWidgetViewport dynamicItemWidgetViewport;
 
     IDynamicScrollItemProvider _itemProvider;
     DynamicScrollItemViewport _dynamicItemViewport;
@@ -20,7 +20,7 @@ public class DynamicScrollList : MonoBehaviour
     {
         _itemProvider = itemProvider;
         _dynamicItemViewport = new DynamicScrollItemViewport(i => _itemProvider.GetItemByIndex(i) != null);
-        _dynamicContent.Init(itemWidgetProvider);
+        dynamicItemWidgetViewport.Init(itemWidgetProvider);
 
         // Initial refresh
         RefreshViewport(DynamicScrollItemViewport.Edge.End);
@@ -31,12 +31,12 @@ public class DynamicScrollList : MonoBehaviour
     public void Shutdown()
     {
         _scrollWidget.onScroll -= OnScroll;
-        _dynamicContent.Shutdown();
+        dynamicItemWidgetViewport.Shutdown();
     }
 
     void OnScroll(Vector2 delta)
     {
-        DynamicScrollItemViewport.Edge inflationEdge = _dynamicContent.Move(delta);
+        DynamicScrollItemViewport.Edge inflationEdge = dynamicItemWidgetViewport.Move(delta);
         RefreshViewport(inflationEdge);
     }
 
@@ -50,14 +50,14 @@ public class DynamicScrollList : MonoBehaviour
 
     bool TryInflate(DynamicScrollItemViewport.Edge edge, Rect viewportWorldRect)
     {
-        if (!_dynamicContent.CanInflate(edge, viewportWorldRect) ||
+        if (!dynamicItemWidgetViewport.CanInflate(edge, viewportWorldRect) ||
             !_dynamicItemViewport.Inflate(edge))
         {
             return false;
         }
 
         int index = _dynamicItemViewport.GetEdgeIndex(edge);
-        _dynamicContent.Inflate(edge, _itemProvider.GetItemByIndex(index));
+        dynamicItemWidgetViewport.Inflate(edge, _itemProvider.GetItemByIndex(index));
 
         // Remove unnecessary elements if the list was scrolled too much on this frame
         TryDeflate(DynamicScrollItemViewport.OppositeEdges[edge], viewportWorldRect);
@@ -66,10 +66,10 @@ public class DynamicScrollList : MonoBehaviour
 
     bool TryDeflate(DynamicScrollItemViewport.Edge edge, Rect viewportWorldRect)
     {
-        if (!_dynamicContent.CanDeflate(edge, viewportWorldRect))
+        if (!dynamicItemWidgetViewport.CanDeflate(edge, viewportWorldRect))
             return false;
 
-        _dynamicContent.Deflate(edge);
+        dynamicItemWidgetViewport.Deflate(edge);
         return _dynamicItemViewport.Deflate(edge);
     }
 
@@ -77,7 +77,7 @@ public class DynamicScrollList : MonoBehaviour
     {
         foreach (DynamicScrollItemViewport.Edge edge in GetEdges())
             if (_dynamicItemViewport.CheckEdge(edge))
-                return _dynamicContent.GetEdgeDelta(_viewportNode, edge);
+                return dynamicItemWidgetViewport.GetEdgeDelta(_viewportNode, edge);
         return Vector2.zero;
     }
 
