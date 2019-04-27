@@ -3,31 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 //
-// Description
-//
-
-public static class DynamicScrollDescription
-{
-    public enum Edge
-    {
-        Head,
-        Tail,
-    }
-
-    public static readonly Dictionary<Edge, Edge> OppositeEdges = new Dictionary<Edge, Edge>
-    {
-        { Edge.Head, Edge.Tail },
-        { Edge.Tail, Edge.Head },
-    };
-
-    public static readonly Dictionary<Edge, int> EdgeInflationSigns = new Dictionary<Edge, int>
-    {
-        { Edge.Head, -1 },
-        { Edge.Tail, 1 },
-    };
-}
-
-//
 // Interfaces
 //
 
