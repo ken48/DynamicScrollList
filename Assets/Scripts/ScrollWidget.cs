@@ -88,7 +88,8 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             return;
 
         float dt = Time.unscaledDeltaTime;
-        Vector2 delta = _inertiaVelocity * _speedCoef * dt;
+        float timeStep = _speedCoef * dt;
+        Vector2 delta = _inertiaVelocity * timeStep;
         _inertiaVelocity *= 1f - Mathf.Clamp01(dt * _inertiaCoef);
 
         OnScroll(delta);

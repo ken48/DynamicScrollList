@@ -24,13 +24,13 @@ public class DynamicScrollItemViewport
     readonly Func<int, bool> _onCheckItem;
     readonly Dictionary<Edge, int> _itemsIndices;
 
-    public DynamicScrollItemViewport(Func<int, bool> onCheckItem)
+    public DynamicScrollItemViewport(Func<int, bool> onCheckItem, int startIndex = 0)
     {
         _onCheckItem = onCheckItem;
         _itemsIndices = new Dictionary<Edge, int>
         {
-            { Edge.Begin, 0 },
-            { Edge.End, -1 },
+            { Edge.Begin, startIndex },
+            { Edge.End, startIndex - 1 },
         };
     }
 

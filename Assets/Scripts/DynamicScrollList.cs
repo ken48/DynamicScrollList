@@ -59,7 +59,7 @@ public class DynamicScrollList : MonoBehaviour
         int index = _dynamicItemViewport.GetEdgeIndex(edge);
         dynamicItemWidgetViewport.Inflate(edge, _itemProvider.GetItemByIndex(index));
 
-        // Remove unnecessary elements if the list was scrolled too much on this frame
+        // Remove unnecessary element if the list was scrolled too much on this frame
         TryDeflate(DynamicScrollItemViewport.OppositeEdges[edge], viewportWorldRect);
         return true;
     }
