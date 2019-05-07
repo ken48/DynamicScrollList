@@ -50,8 +50,8 @@ public class DynamicScrollList : MonoBehaviour
 
     bool TryInflate(DynamicScrollItemViewport.Edge edge, Rect viewportWorldRect)
     {
-        if (!dynamicItemWidgetViewport.CanInflate(edge, viewportWorldRect) ||
-            !_dynamicItemViewport.Inflate(edge))
+        if (!dynamicItemWidgetViewport.NeedInflate(edge, viewportWorldRect) ||
+            !_dynamicItemViewport.TryInflate(edge))
         {
             return false;
         }
@@ -66,11 +66,11 @@ public class DynamicScrollList : MonoBehaviour
 
     bool TryDeflate(DynamicScrollItemViewport.Edge edge, Rect viewportWorldRect)
     {
-        if (!dynamicItemWidgetViewport.CanDeflate(edge, viewportWorldRect))
+        if (!dynamicItemWidgetViewport.NeedDeflate(edge, viewportWorldRect))
             return false;
 
         dynamicItemWidgetViewport.Deflate(edge);
-        return _dynamicItemViewport.Deflate(edge);
+        return _dynamicItemViewport.TryDeflate(edge);
     }
 
     Vector2 GetEdgeDelta()

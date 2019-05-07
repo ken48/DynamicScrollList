@@ -34,7 +34,7 @@ public class DynamicScrollItemViewport
         };
     }
 
-    public bool Inflate(Edge edge)
+    public bool TryInflate(Edge edge)
     {
         int newIndex = _itemsIndices[edge] + EdgeInflationSigns[edge];
         if (!_onCheckItem(newIndex))
@@ -47,7 +47,7 @@ public class DynamicScrollItemViewport
         return true;
     }
 
-    public bool Deflate(Edge edge)
+    public bool TryDeflate(Edge edge)
     {
         if (IsEmpty())
             return false;
