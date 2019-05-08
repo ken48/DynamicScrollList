@@ -58,8 +58,10 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
     public bool NeedInflate(DynamicScrollItemViewport.Edge itemEdge, Rect viewportWorldRect)
     {
         Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
+        float viewportEdgePosition = EdgesDescription.RectPositions[itemWidgetEdge](viewportWorldRect);
         Vector2 startPos = _node.TransformPoint(_edgesLastPositions[itemWidgetEdge] + _spacingVector);
-        return ViewportCheckEdge[edge](RectEdgePositions[edge](viewportWorldRect), startPos, _axis);
+        float widgetEdgePosition = GetVectorComponent(startPos);
+        return EdgesDescription.ViewportHasSpace[itemWidgetEdge](viewportEdgePosition, widgetEdgePosition);
     }
 
     public void Inflate(DynamicScrollItemViewport.Edge edge, IDynamicScrollItem item)
@@ -239,9 +241,11 @@ static class EdgesDescription
         { Edge.Top, Vector2.up },
     };
 
-    static readonly Dictionary<Edge, Func<Vector2, Vector2, bool>> ViewportCheckEdge = new Dictionary<Edge, Func<Vector2, Vector2, bool>>
+    public static readonly Dictionary<Edge, Func<float, float, bool>> ViewportHasSpace = new Dictionary<Edge, Func<float, float, bool>>
     {
-        { Edge.Left, (v, p) => {return true;}/*GetVectorComponent(v, a) < GetVectorComponent(p, a)*/ },
-        { DynamicScrollItemViewport.Edge.End, (v, p, a) => GetVectorComponent(v, a) > GetVectorComponent(p, a) },
+        { Edge.Left, (v, p) => v < p },
+        { Edge.Right, (v, p) => v > p },
+        { Edge.Bottom, (v, p) => v < p },
+        { Edge.Top, (v, p) => v > p },
     };
 }
