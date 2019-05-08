@@ -74,8 +74,10 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
         LayoutRebuilder.ForceRebuildLayoutImmediate(widget.rectTransform);
 
         int sign = DynamicScrollItemViewport.EdgeInflationSigns[edge];
-        AddEdgeLastPosition(widget.rectTransform, sign, edge);
+        _edgesLastPositions[edge] += (widgetRectTransform.rect.size + _spacingVector) * sign * AxisMasks[_axis];
+
         widgetRectTransform.anchoredPosition = _edgesLastPositions[edge];
+        widgetRectTransform.anchoredPosition -= widget.rectTransform.rect.size * AxisMasks[_axis];
 
         switch (edge)
         {
@@ -85,8 +87,6 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
 
             case DynamicScrollItemViewport.Edge.End:
                 _widgets.Add(widget);
-                Vector2 axisMask = AxisMasks[_axis];
-                widgetRectTransform.anchoredPosition -= widget.rectTransform.rect.size * axisMask;
                 break;
         }
     }
@@ -99,8 +99,9 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
     public void Deflate(DynamicScrollItemViewport.Edge edge)
     {
         IDynamicScrollItemWidget widget = GetEdgeWidget(edge);
+
         int sign = -DynamicScrollItemViewport.EdgeInflationSigns[edge];
-        AddEdgeLastPosition(widget.rectTransform, sign, edge);
+        _edgesLastPositions[edge] += (widget.rectTransform.rect.size + _spacingVector) * sign * AxisMasks[_axis];
 
         _itemWidgetsPool.ReturnWidget(widget);
         _widgets.Remove(widget);
@@ -115,12 +116,6 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
         return resultSign == DynamicScrollItemViewport.EdgeInflationSigns[edge] ? resultAxis : Vector2.zero;
     }
 
-    void AddEdgeLastPosition(RectTransform widgetRectTransform, int sign, DynamicScrollItemViewport.Edge edge)
-    {
-        Vector2 axisMask = AxisMasks[_axis];
-        _edgesLastPositions[edge] += (widgetRectTransform.rect.size + _spacingVector) * sign * axisMask;
-    }
-
     bool IsEmpty()
     {
         return _widgets.Count == 0;
@@ -128,6 +123,9 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
 
     IDynamicScrollItemWidget GetEdgeWidget(DynamicScrollItemViewport.Edge edge)
     {
+        // Todo: refactor:
+        // create Dictionary<DynamicScrollItemViewport.Edge, Widget> and you will not need order in list anymore
+
         switch (edge)
         {
             case DynamicScrollItemViewport.Edge.Begin:
