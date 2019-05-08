@@ -275,8 +275,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bc22081ceacd449f9ca4583e5a0daa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _axis: 1
-  _startEdge: 0
+  _headEdge: 3
   _spacing: 10
 --- !u!1 &1763818149
 GameObject:
@@ -474,7 +473,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _scrollWidget: {fileID: 1881900227}
   _viewportNode: {fileID: 60072009}
-  _dynamicContent: {fileID: 948494248}
+  _dynamicItemWidgetViewport: {fileID: 948494248}
 --- !u!1 &2091577112
 GameObject:
   m_ObjectHideFlags: 0

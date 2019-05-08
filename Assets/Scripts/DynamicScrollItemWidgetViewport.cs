@@ -15,14 +15,13 @@ enum Edge
 public class DynamicScrollItemWidgetViewport : MonoBehaviour
 {
     [SerializeField]
-    Edge _startEdge;
+    Edge _headEdge;
     [SerializeField]
     float _spacing;
 
     RectTransform _node;
     DynamicScrollItemWidgetsPool _itemWidgetsPool;
     List<IDynamicScrollItemWidget> _widgets;
-    Vector2 _spacingVector;
     Dictionary<Edge, Vector2> _edgesLastPositions;
 
     public void Init(IDynamicScrollItemWidgetProvider itemWidgetProvider)
@@ -30,11 +29,10 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
         _node = (RectTransform)transform;
         _itemWidgetsPool = new DynamicScrollItemWidgetsPool(itemWidgetProvider, _node);
         _widgets = new List<IDynamicScrollItemWidget>();
-        _spacingVector = EdgesDescription.InflationMasks[_startEdge] * _spacing;
         _edgesLastPositions = new Dictionary<Edge, Vector2>
         {
-            { _startEdge, Vector2.zero },
-            { EdgesDescription.OppositeEdges[_startEdge], _spacingVector },
+            { _headEdge, Vector2.zero },
+            { EdgesDescription.OppositeEdges[_headEdge], EdgesDescription.HeadInflationMasks[_headEdge] * _spacing },
         };
 
         SetPivotAndAnchors(_node);
@@ -47,7 +45,7 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
 
     public DynamicScrollItemViewport.Edge Move(Vector2 delta)
     {
-        Vector2 deltaAxis = delta * EdgesDescription.MoveMasks[_startEdge];
+        Vector2 deltaAxis = delta * EdgesDescription.MoveMasks[_headEdge];
         _node.anchoredPosition += deltaAxis;
 
         var directionSign = (int)Mathf.Sign(GetVectorComponent(deltaAxis));
@@ -59,12 +57,13 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
     {
         Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
         float viewportEdgePosition = EdgesDescription.RectPositions[itemWidgetEdge](viewportWorldRect);
-        Vector2 startPos = _node.TransformPoint(_edgesLastPositions[itemWidgetEdge] + _spacingVector);
+        Vector2 edgeMask = EdgesDescription.HeadInflationMasks[itemWidgetEdge];
+        Vector2 startPos = _node.TransformPoint(_edgesLastPositions[itemWidgetEdge] + edgeMask * _spacing);
         float widgetEdgePosition = GetVectorComponent(startPos);
         return EdgesDescription.ViewportHasSpace[itemWidgetEdge](viewportEdgePosition, widgetEdgePosition);
     }
 
-    public void Inflate(DynamicScrollItemViewport.Edge edge, IDynamicScrollItem item)
+    public void Inflate(DynamicScrollItemViewport.Edge itemEdge, IDynamicScrollItem item)
     {
         IDynamicScrollItemWidget widget = _itemWidgetsPool.GetWidget(item);
         widget.Fill(item);
@@ -73,19 +72,18 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
         SetPivotAndAnchors(widgetRectTransform);
         LayoutRebuilder.ForceRebuildLayoutImmediate(widget.rectTransform);
 
-        int sign = DynamicScrollItemViewport.EdgeInflationSigns[edge];
-        _edgesLastPositions[edge] += (widgetRectTransform.rect.size + _spacingVector) * sign * AxisMasks[_axis];
+        Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
+        Vector2 edgeMask = EdgesDescription.HeadInflationMasks[itemWidgetEdge];
+        _edgesLastPositions[itemWidgetEdge] += widgetRectTransform.rect.size * edgeMask + _spacing * edgeMask;
+        widgetRectTransform.anchoredPosition = _edgesLastPositions[itemWidgetEdge];
 
-        widgetRectTransform.anchoredPosition = _edgesLastPositions[edge];
-        widgetRectTransform.anchoredPosition -= widget.rectTransform.rect.size * AxisMasks[_axis];
-
-        switch (edge)
+        switch (itemEdge)
         {
-            case DynamicScrollItemViewport.Edge.Begin:
+            case DynamicScrollItemViewport.Edge.Head:
                 _widgets.Insert(0, widget);
                 break;
 
-            case DynamicScrollItemViewport.Edge.End:
+            case DynamicScrollItemViewport.Edge.Tail:
                 _widgets.Add(widget);
                 break;
         }
@@ -96,24 +94,30 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
         return !IsEmpty() && !DynamicScrollHelpers.GetWorldRect(GetEdgeWidget(edge).rectTransform).Overlaps(viewportWorldRect);
     }
 
-    public void Deflate(DynamicScrollItemViewport.Edge edge)
+    public void Deflate(DynamicScrollItemViewport.Edge itemEdge)
     {
-        IDynamicScrollItemWidget widget = GetEdgeWidget(edge);
+        IDynamicScrollItemWidget widget = GetEdgeWidget(itemEdge);
 
-        int sign = -DynamicScrollItemViewport.EdgeInflationSigns[edge];
-        _edgesLastPositions[edge] += (widget.rectTransform.rect.size + _spacingVector) * sign * AxisMasks[_axis];
+        Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
+        Vector2 edgeMask = EdgesDescription.HeadInflationMasks[itemWidgetEdge];
+        _edgesLastPositions[itemWidgetEdge] += widget.rectTransform.rect.size * edgeMask + _spacing * edgeMask;
 
         _itemWidgetsPool.ReturnWidget(widget);
         _widgets.Remove(widget);
     }
 
-    public Vector2 GetEdgeDelta(RectTransform viewport, DynamicScrollItemViewport.Edge edge)
+    public Vector2 GetEdgeDelta(RectTransform viewport, DynamicScrollItemViewport.Edge itemEdge)
     {
-        Rect viewportRect = viewport.rect;
-        Vector2 result = -_edgesLastPositions[edge] - _node.anchoredPosition + RectEdgePositions[edge](viewportRect) + viewportRect.size * 0.5f;
-        Vector2 resultAxis = result * AxisMasks[_axis];
-        var resultSign = (int)Mathf.Sign(GetVectorComponent(resultAxis, _axis));
-        return resultSign == DynamicScrollItemViewport.EdgeInflationSigns[edge] ? resultAxis : Vector2.zero;
+        // Todo:
+
+        // Rect viewportRect = viewport.rect;
+        // Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
+        // Vector2 result = -_edgesLastPositions[itemWidgetEdge] - _node.anchoredPosition + EdgesDescription.RectPositions[itemWidgetEdge](viewportRect) * Vector2.one + viewportRect.size * 0.5f;
+        // Vector2 resultAxis = result * EdgesDescription.MoveMasks[itemWidgetEdge];
+        // var resultSign = (int)Mathf.Sign(GetVectorComponent(resultAxis));
+        // return resultSign == DynamicScrollItemViewport.EdgeInflationSigns[itemEdge] ? resultAxis : Vector2.zero;
+
+        return Vector2.zero;
     }
 
     bool IsEmpty()
@@ -123,14 +127,11 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
 
     IDynamicScrollItemWidget GetEdgeWidget(DynamicScrollItemViewport.Edge edge)
     {
-        // Todo: refactor:
-        // create Dictionary<DynamicScrollItemViewport.Edge, Widget> and you will not need order in list anymore
-
         switch (edge)
         {
-            case DynamicScrollItemViewport.Edge.Begin:
+            case DynamicScrollItemViewport.Edge.Head:
                 return _widgets[0];
-            case DynamicScrollItemViewport.Edge.End:
+            case DynamicScrollItemViewport.Edge.Tail:
                 return _widgets[_widgets.Count - 1];
             default:
                 throw new Exception("Unhandled edge type " + edge);
@@ -139,14 +140,14 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
 
     void SetPivotAndAnchors(RectTransform rectTransform)
     {
-        rectTransform.anchorMin = EdgesDescription.AnchorsMin[_startEdge];
-        rectTransform.anchorMax = EdgesDescription.AnchorsMax[_startEdge];
-        rectTransform.pivot = EdgesDescription.Pivots[_startEdge];
+        rectTransform.anchorMin = EdgesDescription.AnchorsMin[_headEdge];
+        rectTransform.anchorMax = EdgesDescription.AnchorsMax[_headEdge];
+        rectTransform.pivot = EdgesDescription.Pivots[_headEdge];
     }
 
     float GetVectorComponent(Vector2 vector)
     {
-        switch (_startEdge)
+        switch (_headEdge)
         {
             case Edge.Left:
             case Edge.Right:
@@ -157,7 +158,7 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
                 return vector.y;
 
             default:
-                throw new Exception("Unhandled widget edge type " + _startEdge);
+                throw new Exception("Unhandled widget edge type " + _headEdge);
         }
     }
 
@@ -165,11 +166,11 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
     {
         switch (itemEdge)
         {
-            case DynamicScrollItemViewport.Edge.Begin:
-                return _startEdge;
+            case DynamicScrollItemViewport.Edge.Head:
+                return _headEdge;
 
-            case DynamicScrollItemViewport.Edge.End:
-                return EdgesDescription.OppositeEdges[_startEdge];
+            case DynamicScrollItemViewport.Edge.Tail:
+                return EdgesDescription.OppositeEdges[_headEdge];
 
             default:
                 throw new Exception("Unhandled item edge type " + itemEdge);
@@ -191,12 +192,12 @@ static class EdgesDescription
         { Edge.Top, Edge.Bottom },
     };
 
-    public static readonly Dictionary<Edge, Vector2> InflationMasks = new Dictionary<Edge, Vector2>
+    public static readonly Dictionary<Edge, Vector2> HeadInflationMasks = new Dictionary<Edge, Vector2>
     {
-        { Edge.Left, Vector2.right },
-        { Edge.Right, Vector2.left },
-        { Edge.Bottom, Vector2.up },
-        { Edge.Top, Vector2.down },
+        { Edge.Left, Vector2.left },
+        { Edge.Right, Vector2.right },
+        { Edge.Bottom, Vector2.down },
+        { Edge.Top, Vector2.up }
     };
 
     public static readonly Dictionary<Edge, Func<Rect, float>> RectPositions = new Dictionary<Edge, Func<Rect, float>>
