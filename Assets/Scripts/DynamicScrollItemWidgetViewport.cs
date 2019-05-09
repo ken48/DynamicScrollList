@@ -12,6 +12,8 @@ enum Edge
     Top,
 }
 
+// Todo: bottom head is ok, but top head is not!
+
 public class DynamicScrollItemWidgetViewport : MonoBehaviour
 {
     [SerializeField]
