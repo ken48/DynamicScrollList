@@ -74,17 +74,20 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
 
         Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
         Vector2 edgeMask = EdgesDescription.HeadInflationMasks[itemWidgetEdge];
-        widgetRectTransform.anchoredPosition = _edgesLastPositions[itemWidgetEdge];
-        _edgesLastPositions[itemWidgetEdge] += widgetRectTransform.rect.size * edgeMask + _spacing * edgeMask;
+        Vector2 prevEdgeLastPosition = _edgesLastPositions[itemWidgetEdge];
+        Vector2 edgeLastPosition = prevEdgeLastPosition + widgetRectTransform.rect.size * edgeMask + _spacing * edgeMask;
+        _edgesLastPositions[itemWidgetEdge] = edgeLastPosition;
 
         switch (itemEdge)
         {
             case DynamicScrollItemViewport.Edge.Head:
                 _widgets.Insert(0, widget);
+                widgetRectTransform.anchoredPosition = edgeLastPosition;
                 break;
 
             case DynamicScrollItemViewport.Edge.Tail:
                 _widgets.Add(widget);
+                widgetRectTransform.anchoredPosition = prevEdgeLastPosition;
                 break;
         }
     }
@@ -100,7 +103,7 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
 
         Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
         Vector2 edgeMask = EdgesDescription.HeadInflationMasks[itemWidgetEdge];
-        _edgesLastPositions[itemWidgetEdge] += widget.rectTransform.rect.size * edgeMask + _spacing * edgeMask;
+        _edgesLastPositions[itemWidgetEdge] -= widget.rectTransform.rect.size * edgeMask + _spacing * edgeMask;
 
         _itemWidgetsPool.ReturnWidget(widget);
         _widgets.Remove(widget);
