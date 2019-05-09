@@ -32,7 +32,7 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
         _edgesLastPositions = new Dictionary<Edge, Vector2>
         {
             { _headEdge, Vector2.zero },
-            { EdgesDescription.OppositeEdges[_headEdge], EdgesDescription.HeadInflationMasks[_headEdge] * _spacing },
+            { EdgesDescription.OppositeEdges[_headEdge], Vector2.zero },
         };
 
         SetPivotAndAnchors(_node);
@@ -74,8 +74,8 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
 
         Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
         Vector2 edgeMask = EdgesDescription.HeadInflationMasks[itemWidgetEdge];
-        _edgesLastPositions[itemWidgetEdge] += widgetRectTransform.rect.size * edgeMask + _spacing * edgeMask;
         widgetRectTransform.anchoredPosition = _edgesLastPositions[itemWidgetEdge];
+        _edgesLastPositions[itemWidgetEdge] += widgetRectTransform.rect.size * edgeMask + _spacing * edgeMask;
 
         switch (itemEdge)
         {
