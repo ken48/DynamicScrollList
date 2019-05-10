@@ -52,7 +52,9 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
             return null;
 
         _node.anchoredPosition += deltaFloat * EdgesDescription.MoveMasks[_headEdge];
-        var inflationSign = -(int)Mathf.Sign(deltaFloat);
+
+        Vector2 inflationDirection = deltaFloat * EdgesDescription.HeadInflationMasks[_headEdge];
+        var inflationSign = (int)Mathf.Sign(GetVectorComponent(inflationDirection));
         return DynamicScrollItemViewport.EdgeInflationSigns.FirstOrDefault(kv => kv.Value == inflationSign).Key;
     }
 
