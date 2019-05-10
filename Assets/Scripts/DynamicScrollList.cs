@@ -36,8 +36,9 @@ public class DynamicScrollList : MonoBehaviour
 
     void OnScroll(Vector2 delta)
     {
-        DynamicScrollItemViewport.Edge inflationEdge = _dynamicItemWidgetViewport.Move(delta);
-        RefreshViewport(inflationEdge);
+        DynamicScrollItemViewport.Edge? inflationEdge = _dynamicItemWidgetViewport.Move(delta);
+        if (inflationEdge.HasValue)
+            RefreshViewport(inflationEdge.Value);
     }
 
     void RefreshViewport(DynamicScrollItemViewport.Edge inflationEdge)

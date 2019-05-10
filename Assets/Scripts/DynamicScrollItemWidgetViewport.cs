@@ -45,13 +45,14 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
         _itemWidgetsPool.Dispose();
     }
 
-    public DynamicScrollItemViewport.Edge Move(Vector2 delta)
+    public DynamicScrollItemViewport.Edge? Move(Vector2 delta)
     {
-        Vector2 deltaAxis = delta * EdgesDescription.MoveMasks[_headEdge];
-        _node.anchoredPosition += deltaAxis;
+        float deltaFloat = GetVectorComponent(delta);
+        if (Mathf.Abs(deltaFloat) < 0.01f)
+            return null;
 
-        var directionSign = (int)Mathf.Sign(GetVectorComponent(deltaAxis));
-        var inflationSign = -directionSign;
+        _node.anchoredPosition += deltaFloat * EdgesDescription.MoveMasks[_headEdge];
+        var inflationSign = -(int)Mathf.Sign(deltaFloat);
         return DynamicScrollItemViewport.EdgeInflationSigns.FirstOrDefault(kv => kv.Value == inflationSign).Key;
     }
 

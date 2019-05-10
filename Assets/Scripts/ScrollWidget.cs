@@ -78,8 +78,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     void OnScroll(Vector2 delta)
     {
-        if (CheckVectorMagnitude(delta))
-            onScroll?.Invoke(delta);
+        onScroll?.Invoke(delta);
     }
 
     void LateUpdate()
