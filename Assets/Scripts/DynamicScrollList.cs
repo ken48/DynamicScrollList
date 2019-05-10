@@ -46,7 +46,7 @@ public class DynamicScrollList : MonoBehaviour
         Rect viewportWorldRect = DynamicScrollHelpers.GetWorldRect(_viewportNode);
         while (TryDeflate(DynamicScrollItemViewport.OppositeEdges[inflationEdge], viewportWorldRect));
         while (TryInflate(inflationEdge, viewportWorldRect));
-        _scrollWidget.SetEdgeDelta(GetEdgeDelta());
+        _scrollWidget.SetEdgeDelta(GetEdgeDelta(viewportWorldRect));
     }
 
     bool TryInflate(DynamicScrollItemViewport.Edge edge, Rect viewportWorldRect)
@@ -74,11 +74,11 @@ public class DynamicScrollList : MonoBehaviour
         return _dynamicItemViewport.TryDeflate(edge);
     }
 
-    Vector2 GetEdgeDelta()
+    Vector2 GetEdgeDelta(Rect viewportWorldRect)
     {
         foreach (DynamicScrollItemViewport.Edge edge in GetEdges())
             if (_dynamicItemViewport.CheckEdge(edge))
-                return _dynamicItemWidgetViewport.GetEdgeDelta(_viewportNode, edge);
+                return _dynamicItemWidgetViewport.GetEdgeDelta(edge, viewportWorldRect);
         return Vector2.zero;
     }
 

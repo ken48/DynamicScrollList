@@ -78,16 +78,14 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
         LayoutRebuilder.ForceRebuildLayoutImmediate(widget.rectTransform);
 
         Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
-        Vector2 edgeMask = EdgesDescription.HeadInflationMasks[itemWidgetEdge];
         Vector2 prevEdgeLastPosition = _edgesLastPositions[itemWidgetEdge];
-        Vector2 edgeLastPosition = prevEdgeLastPosition + widgetRectTransform.rect.size * edgeMask + _spacing * edgeMask;
-        _edgesLastPositions[itemWidgetEdge] = edgeLastPosition;
+        ChangeEdgeLastPosition(itemEdge, widgetRectTransform, 1f);
 
         switch (itemEdge)
         {
             case DynamicScrollItemViewport.Edge.Head:
                 _widgets.Insert(0, widget);
-                widgetRectTransform.anchoredPosition = edgeLastPosition;
+                widgetRectTransform.anchoredPosition = _edgesLastPositions[itemWidgetEdge];
                 break;
 
             case DynamicScrollItemViewport.Edge.Tail:
@@ -105,27 +103,37 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
     public void Deflate(DynamicScrollItemViewport.Edge itemEdge)
     {
         IDynamicScrollItemWidget widget = GetEdgeWidget(itemEdge);
-
-        Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
-        Vector2 edgeMask = EdgesDescription.HeadInflationMasks[itemWidgetEdge];
-        _edgesLastPositions[itemWidgetEdge] -= widget.rectTransform.rect.size * edgeMask + _spacing * edgeMask;
-
+        ChangeEdgeLastPosition(itemEdge, widget.rectTransform, -1f);
         _itemWidgetsPool.ReturnWidget(widget);
         _widgets.Remove(widget);
     }
 
-    public Vector2 GetEdgeDelta(RectTransform viewport, DynamicScrollItemViewport.Edge itemEdge)
+    public Vector2 GetEdgeDelta(DynamicScrollItemViewport.Edge itemEdge, Rect viewportWorldRect)
     {
         // Todo:
 
         // Rect viewportRect = viewport.rect;
-        // Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
+        Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
         // Vector2 result = -_edgesLastPositions[itemWidgetEdge] - _node.anchoredPosition + EdgesDescription.RectPositions[itemWidgetEdge](viewportRect) * Vector2.one + viewportRect.size * 0.5f;
         // Vector2 resultAxis = result * EdgesDescription.MoveMasks[itemWidgetEdge];
         // var resultSign = (int)Mathf.Sign(GetVectorComponent(resultAxis));
         // return resultSign == DynamicScrollItemViewport.EdgeInflationSigns[itemEdge] ? resultAxis : Vector2.zero;
 
+        float viewportEdgePosition = EdgesDescription.RectPositions[itemWidgetEdge](viewportWorldRect);
+        Vector2 edgeMask = EdgesDescription.HeadInflationMasks[itemWidgetEdge];
+        Vector2 startPos = _node.TransformPoint(_edgesLastPositions[itemWidgetEdge]);
+
+        // Todo: wtf - tail last position contains spacing
+        // Debug.Log(itemEdge + " " + itemWidgetEdge + " " + startPos.y + " " + viewportEdgePosition);
+
         return Vector2.zero;
+    }
+
+    void ChangeEdgeLastPosition(DynamicScrollItemViewport.Edge itemEdge, RectTransform widgetRectTransform, float sign)
+    {
+        Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
+        Vector2 edgeMask = EdgesDescription.HeadInflationMasks[itemWidgetEdge];
+        _edgesLastPositions[itemWidgetEdge] += (widgetRectTransform.rect.size * edgeMask + _spacing * edgeMask) * sign;
     }
 
     bool IsEmpty()
