@@ -43,4 +43,9 @@ public static class DynamicScrollHelpers
         Vector2 worldRectMax = rectTransform.TransformPoint(rect.max);
         return Rect.MinMaxRect(worldRectMin.x, worldRectMin.y, worldRectMax.x, worldRectMax.y);
     }
+
+    public static bool CheckVectorMagnitude(Vector2 vector)
+    {
+        return vector.sqrMagnitude >= 1e-6f;
+    }
 }

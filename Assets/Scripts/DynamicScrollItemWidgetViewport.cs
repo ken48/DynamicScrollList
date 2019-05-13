@@ -12,10 +12,10 @@ enum Edge
     Top,
 }
 
-// Todo: bottom head is ok, but top head is not!
-
 public class DynamicScrollItemWidgetViewport : MonoBehaviour
 {
+    public Vector2 moveMask => EdgesDescription.MoveMasks[_headEdge];
+
     [SerializeField]
     Edge _headEdge;
     [SerializeField]
@@ -47,13 +47,13 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
 
     public DynamicScrollItemViewport.Edge? Move(Vector2 delta)
     {
-        float deltaFloat = GetVectorComponent(delta);
-        if (Mathf.Abs(deltaFloat) < 0.01f)
+        Vector2 deltaMasked = delta * EdgesDescription.MoveMasks[_headEdge];
+        if (!DynamicScrollHelpers.CheckVectorMagnitude(deltaMasked))
             return null;
 
-        _node.anchoredPosition += deltaFloat * EdgesDescription.MoveMasks[_headEdge];
+        _node.anchoredPosition += deltaMasked;
 
-        Vector2 inflationDirection = deltaFloat * EdgesDescription.HeadInflationMasks[_headEdge];
+        Vector2 inflationDirection = deltaMasked * EdgesDescription.HeadInflationMasks[_headEdge];
         var inflationSign = (int)Mathf.Sign(GetVectorComponent(inflationDirection));
         return DynamicScrollItemViewport.EdgeInflationSigns.FirstOrDefault(kv => kv.Value == inflationSign).Key;
     }
@@ -110,23 +110,18 @@ public class DynamicScrollItemWidgetViewport : MonoBehaviour
 
     public Vector2 GetEdgeDelta(DynamicScrollItemViewport.Edge itemEdge, Rect viewportWorldRect)
     {
-        // Todo:
-
-        // Rect viewportRect = viewport.rect;
         Edge itemWidgetEdge = GetItemWidgetEdge(itemEdge);
-        // Vector2 result = -_edgesLastPositions[itemWidgetEdge] - _node.anchoredPosition + EdgesDescription.RectPositions[itemWidgetEdge](viewportRect) * Vector2.one + viewportRect.size * 0.5f;
-        // Vector2 resultAxis = result * EdgesDescription.MoveMasks[itemWidgetEdge];
-        // var resultSign = (int)Mathf.Sign(GetVectorComponent(resultAxis));
-        // return resultSign == DynamicScrollItemViewport.EdgeInflationSigns[itemEdge] ? resultAxis : Vector2.zero;
-
         float viewportEdgePosition = EdgesDescription.RectPositions[itemWidgetEdge](viewportWorldRect);
         Vector2 edgeMask = EdgesDescription.HeadInflationMasks[itemWidgetEdge];
         Vector2 startPos = _node.TransformPoint(_edgesLastPositions[itemWidgetEdge]);
 
-        // Todo: wtf - tail last position contains spacing
-        // Debug.Log(itemEdge + " " + itemWidgetEdge + " " + startPos.y + " " + viewportEdgePosition);
+        Debug.Log(itemEdge + " " + itemWidgetEdge + " " + (viewportEdgePosition - startPos.y) * edgeMask.y);
 
-        return Vector2.zero;
+        // Todo: wtf - tail last position contains spacing
+        var res = (viewportEdgePosition - startPos.y) * edgeMask.y;
+
+        // Todo: scaleFactor
+        return res > 0f ? res * edgeMask / GetComponentInParent<Canvas>().scaleFactor : Vector2.zero;
     }
 
     void ChangeEdgeLastPosition(DynamicScrollItemViewport.Edge itemEdge, RectTransform widgetRectTransform, float sign)

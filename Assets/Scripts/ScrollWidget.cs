@@ -18,6 +18,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     Vector2 _startPosition;
     Vector2 _lastDelta;
     Vector2 _inertiaVelocity;
+    Vector2 _moveMask;
     bool _isDragging;
     float _elasticity;
 
@@ -26,6 +27,12 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         _speedCoef = 15f;
         _inertiaCoef = 3f;
         _elasticityCoef = 0.5f;
+    }
+
+    // Todo: remove dependency
+    public void Init(Vector2 moveMask)
+    {
+        _moveMask = moveMask;
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -44,7 +51,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             return;
 
         Vector2 delta = GetDeltaPosition(eventData);
-        if (CheckVectorMagnitude(delta))
+        if (DynamicScrollHelpers.CheckVectorMagnitude(delta))
             _lastDelta = delta;
 
         OnScroll(delta);
@@ -83,7 +90,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     void LateUpdate()
     {
-        if (_isDragging || !CheckVectorMagnitude(_inertiaVelocity))
+        if (_isDragging || !DynamicScrollHelpers.CheckVectorMagnitude(_inertiaVelocity))
             return;
 
         float dt = Time.unscaledDeltaTime;
@@ -101,7 +108,7 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     Vector2 GetDeltaPosition(PointerEventData eventData)
     {
         GetLocalPosition(eventData, out Vector2 finishPosition);
-        Vector2 delta = finishPosition - _startPosition;
+        Vector2 delta = (finishPosition - _startPosition) * _moveMask;
         _startPosition = finishPosition;
 
         if (_elasticity < 1f)
@@ -113,10 +120,5 @@ public class ScrollWidget : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     {
         return RectTransformUtility.ScreenPointToLocalPointInRectangle(_viewport,
             eventData.position, eventData.pressEventCamera, out position);
-    }
-
-    static bool CheckVectorMagnitude(Vector2 vector)
-    {
-        return vector.sqrMagnitude >= 1e-6f;
     }
 }
