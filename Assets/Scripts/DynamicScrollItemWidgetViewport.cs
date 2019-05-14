@@ -12,6 +12,8 @@ enum Edge
     Top,
 }
 
+// Todo: bring order to the approach: 1-floating number or vector approach
+
 public class DynamicScrollItemWidgetViewport : MonoBehaviour
 {
     public Vector2 moveMask => EdgesDescription.MoveMasks[_headEdge];
