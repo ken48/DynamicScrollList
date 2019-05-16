@@ -1,7 +1,8 @@
-﻿using TMPro;
-using UnityEngine;
+﻿using UnityEngine;
+using TMPro;
+using DynamicScroll;
 
-public class ChatItemWidget2 : MonoBehaviour, IDynamicScrollItemWidget
+public class ChatItemWidget2 : MonoBehaviour, IWidget
 {
     public GameObject go => gameObject;
     public RectTransform rectTransform => (RectTransform)transform;
@@ -15,7 +16,7 @@ public class ChatItemWidget2 : MonoBehaviour, IDynamicScrollItemWidget
     [SerializeField]
     TextMeshProUGUI _stamp;
 
-    public void Fill(IDynamicScrollItem item)
+    public void Fill(IItem item)
     {
         FillInternal((ChatItem2)item);
     }

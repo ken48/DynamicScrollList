@@ -1,7 +1,8 @@
 ﻿using System;
 using UnityEngine;
+using DynamicScroll;
 
-public class ChatItem : IDynamicScrollItem
+public class ChatItem : IItem
 {
     public long id;
     public DateTime creation;
@@ -19,7 +20,7 @@ public class ChatItem2 : ChatItem
     public int donationValue;
 }
 
-public class ChatItemsProvider : IDynamicScrollItemProvider
+public class ChatItemsProvider : IItemsProvider
 {
     ChatItem[] _items;
 
@@ -28,15 +29,15 @@ public class ChatItemsProvider : IDynamicScrollItemProvider
         _items = items;
     }
 
-    public IDynamicScrollItem GetItemByIndex(int index)
+    public IItem GetItemByIndex(int index)
     {
         return index >= 0 && index < _items?.Length ? _items[index] : null;
     }
 }
 
-public class ChatItemWidgetsProvider : IDynamicScrollItemWidgetProvider
+public class ChatItemWidgetsProvider : IWidgetsProvider
 {
-    public IDynamicScrollItemWidget GetNewItemWidget(IDynamicScrollItem item, Transform rootNode)
+    public IWidget GetNewWidget(IItem item, Transform rootNode)
     {
         if (item is ChatItem1)
             return GameObject.Instantiate(Resources.Load<ChatItemWidget1>("Prefabs/ChatItemWidget1"), rootNode);
@@ -46,7 +47,7 @@ public class ChatItemWidgetsProvider : IDynamicScrollItemWidgetProvider
         throw new Exception("Unknown item widget type");
     }
 
-    public void ReturnItemWidget(IDynamicScrollItemWidget itemWidget)
+    public void ReturnWidget(IWidget itemWidget)
     {
         if (itemWidget as Component != null)
             GameObject.Destroy(itemWidget.go);
