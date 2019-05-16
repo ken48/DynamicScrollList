@@ -15,7 +15,7 @@ namespace DynamicScroll
         [SerializeField]
         RectTransform _contentNode;
 
-        [Header("Scroller")]
+        [Header("Scroll")]
         [SerializeField]
         float _speedCoef;
         [SerializeField]
@@ -23,7 +23,7 @@ namespace DynamicScroll
         [SerializeField]
         float _elasticityCoef;
 
-        [Header("WidgetsViewport")]
+        [Header("Layout")]
         [SerializeField]
         WidgetsAlignment _aignment;
         [SerializeField]
