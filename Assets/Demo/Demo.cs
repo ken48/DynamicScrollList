@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using DynamicScroll;
 
 // Todo: demo chat application
 
