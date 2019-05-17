@@ -8,6 +8,7 @@ namespace DynamicScroll.Internal
         readonly Dictionary<ItemsEdge, int> _itemsIndices;
         readonly IItemsProvider _itemsProvider;
 
+        // Todo: variable start item index
         public ItemsViewport(IItemsProvider itemsProvider, int startIndex = 0)
         {
             _itemsProvider = itemsProvider;

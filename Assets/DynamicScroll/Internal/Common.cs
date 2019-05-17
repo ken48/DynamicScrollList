@@ -1,19 +1,31 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace DynamicScroll
-{
-    public enum WidgetsAlignment
-    {
-        Left,
-        Right,
-        Bottom,
-        Top,
-    }
-}
-
 namespace DynamicScroll.Internal
 {
+    internal enum Axis
+    {
+        X,
+        Y,
+    }
+
+    internal static class AxisMaskDesc
+    {
+        public static readonly Dictionary<Axis, Vector2> AxisMasks = new Dictionary<Axis, Vector2>
+        {
+            { Axis.X, Vector2.right },
+            { Axis.Y, Vector2.up },
+        };
+
+        public static readonly Dictionary<WidgetsAlignment, Axis> WidgetsAlignmentAxis = new Dictionary<WidgetsAlignment, Axis>
+        {
+            { WidgetsAlignment.Left, Axis.X },
+            { WidgetsAlignment.Right, Axis.X },
+            { WidgetsAlignment.Bottom, Axis.Y },
+            { WidgetsAlignment.Top, Axis.Y },
+        };
+    }
+
     //
     // ItemsEdge
     //

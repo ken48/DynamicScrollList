@@ -4,6 +4,14 @@ using DynamicScroll.Internal;
 
 namespace DynamicScroll
 {
+    public enum WidgetsAlignment
+    {
+        Left,
+        Right,
+        Bottom,
+        Top,
+    }
+
     // Todo: adding, deleting, changing of element on fly
     // Todo: navigation to some data index
 
@@ -25,7 +33,7 @@ namespace DynamicScroll
 
         [Header("Layout")]
         [SerializeField]
-        WidgetsAlignment _aignment;
+        WidgetsAlignment _alignment;
         [SerializeField]
         float _spacing;
 
@@ -46,10 +54,10 @@ namespace DynamicScroll
         {
             _itemsProvider = itemsProvider;
             _itemsViewport = new ItemsViewport(itemsProvider);
-            _widgetsViewport = new WidgetsViewport(_contentNode, widgetsProvider, _aignment, _spacing);
+            _widgetsViewport = new WidgetsViewport(_contentNode, widgetsProvider, _alignment, _spacing);
 
             _scroller = GetComponent<Scroller>();
-            _scroller.Init(_viewportNode, _speedCoef, _inertiaCoef, _elasticityCoef, _widgetsViewport.moveMask);
+            _scroller.Init(_viewportNode, _speedCoef, _inertiaCoef, _elasticityCoef, AxisMaskDesc.WidgetsAlignmentAxis[_alignment]);
 
             // Initial refresh
             RefreshViewport(ItemsEdge.Tail);

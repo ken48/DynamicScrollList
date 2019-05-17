@@ -457,7 +457,7 @@ MonoBehaviour:
   _speedCoef: 15
   _inertiaCoef: 3
   _elasticityCoef: 0.5
-  _aignment: 3
+  _alignment: 2
   _spacing: 10
 --- !u!1 &2091577112
 GameObject:

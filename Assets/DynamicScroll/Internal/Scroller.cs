@@ -15,32 +15,32 @@ namespace DynamicScroll.Internal
         Vector2 _startPosition;
         Vector2 _lastDelta;
         Vector2 _inertiaVelocity;
-        Vector2 _moveMask;
         bool _isDragging;
         float _elasticity;
+        Axis _axis;
 
-        // Todo: remove dependency moveMask
-        public void Init(RectTransform viewport, float speedCoef, float inertiaCoef, float elasticityCoef, Vector2 moveMask)
+        public void Init(RectTransform viewport, float speedCoef, float inertiaCoef, float elasticityCoef, Axis axis)
         {
             _viewport = viewport;
             _speedCoef = speedCoef;
             _elasticityCoef = elasticityCoef;
             _inertiaCoef = inertiaCoef;
-            _moveMask = moveMask;
+            _axis = axis;
         }
 
         public void SetEdgeDelta(Vector2 edgeDelta)
         {
+            Vector2 edgeDeltaAxis = edgeDelta * AxisMaskDesc.AxisMasks[_axis];
             if (_isDragging)
             {
                 Vector2 viewportSize = _viewport.rect.size;
-                float normalizedEdgeDeltaX = Mathf.Abs(edgeDelta.x / viewportSize.x);
-                float normalizedEdgeDeltaY = Mathf.Abs(edgeDelta.y / viewportSize.y);
-                _elasticity = 1f - Mathf.Clamp01(new Vector2(normalizedEdgeDeltaX, normalizedEdgeDeltaY).magnitude);
+                float normalizedX = Mathf.Abs(edgeDeltaAxis.x / viewportSize.x);
+                float normalizedY = Mathf.Abs(edgeDeltaAxis.y / viewportSize.y);
+                _elasticity = 1f - Mathf.Clamp01(new Vector2(normalizedX, normalizedY).magnitude);
             }
 
-            if (edgeDelta.sqrMagnitude > 0f)
-                _inertiaVelocity = edgeDelta * _elasticityCoef;
+            if (edgeDeltaAxis.sqrMagnitude > 0f)
+                _inertiaVelocity = edgeDeltaAxis * _elasticityCoef;
         }
 
         void OnScroll(Vector2 delta)
@@ -106,12 +106,12 @@ namespace DynamicScroll.Internal
         Vector2 GetDeltaPosition(PointerEventData eventData)
         {
             GetLocalPosition(eventData, out Vector2 finishPosition);
-            Vector2 delta = (finishPosition - _startPosition) * _moveMask;
+            Vector2 deltaAxis = (finishPosition - _startPosition) * AxisMaskDesc.AxisMasks[_axis];
             _startPosition = finishPosition;
 
             if (_elasticity < 1f)
-                delta *= _elasticity * _elasticityCoef;
-            return delta;
+                deltaAxis *= _elasticity * _elasticityCoef;
+            return deltaAxis;
         }
 
         bool GetLocalPosition(PointerEventData eventData, out Vector2 position)

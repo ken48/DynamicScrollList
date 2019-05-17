@@ -9,8 +9,6 @@ namespace DynamicScroll.Internal
     // Todo: bring order to the approach: 1-floating number or vector approach
     internal class WidgetsViewport
     {
-        public Vector2 moveMask => WidgetsAlignmentDesc.MoveMasks[_alignment];
-
         readonly RectTransform _node;
         readonly WidgetsPool _itemWidgetsPool;
         readonly List<IWidget> _widgets;
@@ -42,7 +40,8 @@ namespace DynamicScroll.Internal
 
         public ItemsEdge? Move(Vector2 delta)
         {
-            Vector2 deltaMasked = delta * WidgetsAlignmentDesc.MoveMasks[_alignment];
+            Axis axis = AxisMaskDesc.WidgetsAlignmentAxis[_alignment];
+            Vector2 deltaMasked = delta * AxisMaskDesc.AxisMasks[axis];
             if (!DynamicScrollHelpers.CheckVectorMagnitude(deltaMasked))
                 return null;
 
@@ -226,14 +225,6 @@ namespace DynamicScroll.Internal
             { WidgetsAlignment.Right, new Vector2(1f, 0.5f) },
             { WidgetsAlignment.Bottom, new Vector2(0.5f, 0f) },
             { WidgetsAlignment.Top, new Vector2(0.5f, 1f) },
-        };
-
-        public static readonly Dictionary<WidgetsAlignment, Vector2> MoveMasks = new Dictionary<WidgetsAlignment, Vector2>
-        {
-            { WidgetsAlignment.Left, Vector2.right },
-            { WidgetsAlignment.Right, Vector2.right },
-            { WidgetsAlignment.Bottom, Vector2.up },
-            { WidgetsAlignment.Top, Vector2.up },
         };
 
         public static readonly Dictionary<WidgetsAlignment, Func<float, float, bool>> ViewportHasSpace = new Dictionary<WidgetsAlignment, Func<float, float, bool>>
