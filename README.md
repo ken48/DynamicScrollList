@@ -1,2 +1,2 @@
-# DynamicScrollWidget
-Dynamic scroll for Unity UI ScrollRect
+# DynamicScrollList
+Dynamic scroll list for Unity UI
