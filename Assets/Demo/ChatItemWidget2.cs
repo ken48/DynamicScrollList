@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using TMPro;
+using UnityEngine.UI;
 using DynamicScroll;
 
 public class ChatItemWidget2 : MonoBehaviour, IWidget
@@ -8,13 +8,13 @@ public class ChatItemWidget2 : MonoBehaviour, IWidget
     public RectTransform rectTransform => (RectTransform)transform;
 
     [SerializeField]
-    TextMeshProUGUI _title;
+    Text _title;
     [SerializeField]
-    TextMeshProUGUI _sender;
+    Text _sender;
     [SerializeField]
-    TextMeshProUGUI _message;
+    Text _message;
     [SerializeField]
-    TextMeshProUGUI _stamp;
+    Text _stamp;
 
     public void Fill(IItem item)
     {
