@@ -33,7 +33,7 @@ namespace DynamicScroll.Internal
             if (_isDragging)
             {
                 float viewportSizeFloat = Helpers.GetVectorComponent(_viewport.rect.size, _axis);
-                _elasticity = 1f - Mathf.Clamp01(edgeDelta / viewportSizeFloat);
+                _elasticity = 1f - Mathf.Clamp01(Mathf.Abs(edgeDelta) / viewportSizeFloat);
             }
 
             if (!Helpers.IsZeroValue(edgeDelta))
