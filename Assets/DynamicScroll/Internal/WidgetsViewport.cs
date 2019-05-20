@@ -6,15 +6,15 @@ using UnityEngine.UI;
 
 namespace DynamicScroll.Internal
 {
-    // Todo: bring order to the approach: 1-floating number or vector approach
     internal class WidgetsViewport
     {
         readonly RectTransform _node;
         readonly WidgetsPool _itemWidgetsPool;
         readonly List<IWidget> _widgets;
-        readonly Dictionary<WidgetsAlignment, Vector2> _edgesLastPositions;
+        readonly Dictionary<WidgetsAlignment, float> _edgesLastPositions;
         readonly WidgetsAlignment _alignment;
         readonly float _spacing;
+        readonly Axis _axis;
 
         public WidgetsViewport(RectTransform node, IWidgetsProvider widgetsProvider, WidgetsAlignment alignment, float spacing)
         {
@@ -23,10 +23,11 @@ namespace DynamicScroll.Internal
             _widgets = new List<IWidget>();
             _alignment = alignment;
             _spacing = spacing;
+            _axis = AxisMaskDesc.WidgetsAlignmentAxis[_alignment];
 
-            _edgesLastPositions = new Dictionary<WidgetsAlignment, Vector2>
+            _edgesLastPositions = new Dictionary<WidgetsAlignment, float>
             {
-                { alignment, Vector2.zero },
+                { _alignment, 0f },
                 { WidgetsAlignmentDesc.OppositeEdges[_alignment], _spacing * WidgetsAlignmentDesc.HeadInflationMasks[_alignment] },
             };
 
@@ -38,17 +39,15 @@ namespace DynamicScroll.Internal
             _itemWidgetsPool.Clear();
         }
 
-        public ItemsEdge? Move(Vector2 delta)
+        public ItemsEdge? Move(float delta)
         {
-            Axis axis = AxisMaskDesc.WidgetsAlignmentAxis[_alignment];
-            Vector2 deltaMasked = delta * AxisMaskDesc.AxisMasks[axis];
-            if (!DynamicScrollHelpers.CheckVectorMagnitude(deltaMasked))
+            if (Helpers.IsZeroValue(delta))
                 return null;
 
-            _node.anchoredPosition += deltaMasked;
+            _node.anchoredPosition += delta * AxisMaskDesc.AxisMasks[_axis];
 
-            Vector2 inflationDirection = deltaMasked * WidgetsAlignmentDesc.HeadInflationMasks[_alignment];
-            var inflationSign = (int)Mathf.Sign(GetVectorComponent(inflationDirection));
+            float inflationDirection = delta * WidgetsAlignmentDesc.HeadInflationMasks[_alignment];
+            int inflationSign = Math.Sign(inflationDirection);
             return ItemsEdgeDesc.InflationSigns.FirstOrDefault(kv => kv.Value == inflationSign).Key;
         }
 
@@ -56,9 +55,10 @@ namespace DynamicScroll.Internal
         {
             WidgetsAlignment itemWidgetEdge = GetItemWidgetEdge(itemEdge);
             float viewportEdgePosition = WidgetsAlignmentDesc.RectPositions[itemWidgetEdge](viewportWorldRect);
-            Vector2 edgeMask = WidgetsAlignmentDesc.HeadInflationMasks[itemWidgetEdge];
-            Vector2 startPos = _node.TransformPoint(_edgesLastPositions[itemWidgetEdge] + edgeMask * _spacing);
-            float widgetEdgePosition = GetVectorComponent(startPos);
+            float nextPositionFloat = _edgesLastPositions[itemWidgetEdge] + _spacing *
+                WidgetsAlignmentDesc.HeadInflationMasks[itemWidgetEdge];
+            Vector2 startPos = _node.TransformPoint(nextPositionFloat * AxisMaskDesc.AxisMasks[_axis]);
+            float widgetEdgePosition = Helpers.GetVectorComponent(startPos, _axis);
             return WidgetsAlignmentDesc.ViewportHasSpace[itemWidgetEdge](viewportEdgePosition, widgetEdgePosition);
         }
 
@@ -73,10 +73,12 @@ namespace DynamicScroll.Internal
 
             // Change edge last position
             WidgetsAlignment itemWidgetEdge = GetItemWidgetEdge(itemEdge);
-            Vector2 edgeMask = WidgetsAlignmentDesc.HeadInflationMasks[itemWidgetEdge];
-            Vector2 nextWidgetPosition = _edgesLastPositions[itemWidgetEdge] + _spacing * edgeMask;
-            Vector2 newEdgesLastPositions = nextWidgetPosition + widget.rectTransform.rect.size * edgeMask;
-            _edgesLastPositions[itemWidgetEdge] = newEdgesLastPositions;
+            float inflationMask = WidgetsAlignmentDesc.HeadInflationMasks[itemWidgetEdge];
+            float nextPositionFloat = _edgesLastPositions[itemWidgetEdge] + _spacing * inflationMask;
+            Vector2 axisMask = AxisMaskDesc.AxisMasks[_axis];
+            Vector2 nextWidgetPosition = nextPositionFloat * axisMask;
+            Vector2 newEdgesLastPositions = nextWidgetPosition + widget.rectTransform.rect.size * axisMask * inflationMask;
+            _edgesLastPositions[itemWidgetEdge] = Helpers.GetVectorComponent(newEdgesLastPositions, _axis);
 
             switch (itemEdge)
             {
@@ -94,7 +96,7 @@ namespace DynamicScroll.Internal
 
         public bool NeedDeflate(ItemsEdge edge, Rect viewportWorldRect)
         {
-            return !IsEmpty() && !DynamicScrollHelpers.GetWorldRect(GetEdgeWidget(edge).rectTransform).Overlaps(viewportWorldRect);
+            return !IsEmpty() && !Helpers.GetWorldRect(GetEdgeWidget(edge).rectTransform).Overlaps(viewportWorldRect);
         }
 
         public void Deflate(ItemsEdge itemEdge)
@@ -105,18 +107,18 @@ namespace DynamicScroll.Internal
 
             // Change edge last position
             WidgetsAlignment itemWidgetEdge = GetItemWidgetEdge(itemEdge);
-            Vector2 edgeMask = WidgetsAlignmentDesc.HeadInflationMasks[itemWidgetEdge];
-            _edgesLastPositions[itemWidgetEdge] -= widget.rectTransform.rect.size * edgeMask + _spacing * edgeMask;
+            _edgesLastPositions[itemWidgetEdge] -= (Helpers.GetVectorComponent(widget.rectTransform.rect.size, _axis) +
+                _spacing) * WidgetsAlignmentDesc.HeadInflationMasks[itemWidgetEdge];
         }
 
-        public Vector2 GetEdgeDelta(ItemsEdge itemEdge, Rect viewportWorldRect)
+        public float GetEdgeDelta(ItemsEdge itemEdge, Rect viewportWorldRect)
         {
             WidgetsAlignment itemWidgetEdge = GetItemWidgetEdge(itemEdge);
             float viewportEdgePosition = WidgetsAlignmentDesc.RectPositions[itemWidgetEdge](viewportWorldRect);
-            Vector2 edgeMask = WidgetsAlignmentDesc.HeadInflationMasks[itemWidgetEdge];
-            Vector2 startPos = _node.TransformPoint(_edgesLastPositions[itemWidgetEdge]);
-            var res = (viewportEdgePosition - startPos.y) * edgeMask.y;
-            return res > 0f ? res * edgeMask / _node.lossyScale : Vector2.zero;
+            Vector2 startPos = _node.TransformPoint(_edgesLastPositions[itemWidgetEdge] * AxisMaskDesc.AxisMasks[_axis]);
+            float inflationMask = WidgetsAlignmentDesc.HeadInflationMasks[itemWidgetEdge];
+            var res = (viewportEdgePosition - Helpers.GetVectorComponent(startPos, _axis)) * inflationMask;
+            return res > 0f ? res * inflationMask / Helpers.GetVectorComponent(_node.lossyScale, _axis) : 0f;
         }
 
         bool IsEmpty()
@@ -142,21 +144,6 @@ namespace DynamicScroll.Internal
             rectTransform.anchorMin = WidgetsAlignmentDesc.AnchorsMin[_alignment];
             rectTransform.anchorMax = WidgetsAlignmentDesc.AnchorsMax[_alignment];
             rectTransform.pivot = WidgetsAlignmentDesc.Pivots[_alignment];
-        }
-
-        float GetVectorComponent(Vector2 vector)
-        {
-            switch (_alignment)
-            {
-                case WidgetsAlignment.Left:
-                case WidgetsAlignment.Right:
-                    return vector.x;
-                case WidgetsAlignment.Bottom:
-                case WidgetsAlignment.Top:
-                    return vector.y;
-                default:
-                    throw new Exception("Unhandled widget edge type " + _alignment);
-            }
         }
 
         WidgetsAlignment GetItemWidgetEdge(ItemsEdge itemEdge)
@@ -187,12 +174,12 @@ namespace DynamicScroll.Internal
             { WidgetsAlignment.Top, WidgetsAlignment.Bottom },
         };
 
-        public static readonly Dictionary<WidgetsAlignment, Vector2> HeadInflationMasks = new Dictionary<WidgetsAlignment, Vector2>
+        public static readonly Dictionary<WidgetsAlignment, float> HeadInflationMasks = new Dictionary<WidgetsAlignment, float>
         {
-            { WidgetsAlignment.Left, Vector2.left },
-            { WidgetsAlignment.Right, Vector2.right },
-            { WidgetsAlignment.Bottom, Vector2.down },
-            { WidgetsAlignment.Top, Vector2.up }
+            { WidgetsAlignment.Left, -1f },
+            { WidgetsAlignment.Right, 1f },
+            { WidgetsAlignment.Bottom, -1f },
+            { WidgetsAlignment.Top, 1f }
         };
 
         public static readonly Dictionary<WidgetsAlignment, Func<Rect, float>> RectPositions = new Dictionary<WidgetsAlignment, Func<Rect, float>>

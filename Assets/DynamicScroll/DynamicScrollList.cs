@@ -1,9 +1,10 @@
 ﻿using System;
 using UnityEngine;
-using DynamicScroll.Internal;
 
 namespace DynamicScroll
 {
+    using Internal;
+
     public enum WidgetsAlignment
     {
         Left,
@@ -57,7 +58,7 @@ namespace DynamicScroll
             _widgetsViewport = new WidgetsViewport(_contentNode, widgetsProvider, _alignment, _spacing);
 
             _scroller = GetComponent<Scroller>();
-            _scroller.Init(_viewportNode, _speedCoef, _inertiaCoef, _elasticityCoef, AxisMaskDesc.WidgetsAlignmentAxis[_alignment]);
+            _scroller.Init(_viewportNode, AxisMaskDesc.WidgetsAlignmentAxis[_alignment], _speedCoef, _inertiaCoef, _elasticityCoef);
 
             // Initial refresh
             RefreshViewport(ItemsEdge.Tail);
@@ -71,7 +72,7 @@ namespace DynamicScroll
             _widgetsViewport.Clear();
         }
 
-        void OnScroll(Vector2 delta)
+        void OnScroll(float delta)
         {
             ItemsEdge? inflationEdge = _widgetsViewport.Move(delta);
             if (inflationEdge.HasValue)
@@ -80,9 +81,9 @@ namespace DynamicScroll
 
         void RefreshViewport(ItemsEdge inflationEdge)
         {
-            Rect viewportWorldRect = DynamicScrollHelpers.GetWorldRect(_viewportNode);
+            Rect viewportWorldRect = Helpers.GetWorldRect(_viewportNode);
             while (TryDeflate(ItemsEdgeDesc.Opposites[inflationEdge], viewportWorldRect));
-            while (TryInflate(inflationEdge, viewportWorldRect)) ;
+            while (TryInflate(inflationEdge, viewportWorldRect));
             _scroller.SetEdgeDelta(GetEdgeDelta(viewportWorldRect));
         }
 
@@ -110,13 +111,13 @@ namespace DynamicScroll
             return _itemsViewport.TryDeflate(edge);
         }
 
-        Vector2 GetEdgeDelta(Rect viewportWorldRect)
+        float GetEdgeDelta(Rect viewportWorldRect)
         {
             foreach (ItemsEdge edge in GetEdges())
                 if (_itemsViewport.CheckEdge(edge))
                     return _widgetsViewport.GetEdgeDelta(edge, viewportWorldRect);
 
-            return Vector2.zero;
+            return 0f;
         }
 
         //

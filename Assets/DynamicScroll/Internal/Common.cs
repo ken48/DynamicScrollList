@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace DynamicScroll.Internal
@@ -55,7 +56,7 @@ namespace DynamicScroll.Internal
     // Helpers
     //
 
-    internal static class DynamicScrollHelpers
+    internal static class Helpers
     {
         // Todo: move to DynamicContent somehow... The problem is optimization only
         // How not to calculate this each time
@@ -67,9 +68,22 @@ namespace DynamicScroll.Internal
             return Rect.MinMaxRect(worldRectMin.x, worldRectMin.y, worldRectMax.x, worldRectMax.y);
         }
 
-        public static bool CheckVectorMagnitude(Vector2 vector)
+        public static bool IsZeroValue(float value)
         {
-            return vector.sqrMagnitude >= 1e-6f;
+            return Mathf.Abs(value) < 0.001f;
+        }
+
+        public static float GetVectorComponent(Vector2 vector, Axis axis)
+        {
+            switch (axis)
+            {
+                case Axis.X:
+                    return vector.x;
+                case Axis.Y:
+                    return vector.y;
+                default:
+                    throw new Exception("Unhandled axis type " + axis);
+            }
         }
     }
 }

@@ -6,20 +6,20 @@ namespace DynamicScroll.Internal
 {
     internal class Scroller : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
-        public event Action<Vector2> onScroll;
+        public event Action<float> onScroll;
 
         RectTransform _viewport;
+        Axis _axis;
         float _speedCoef;
         float _inertiaCoef;
         float _elasticityCoef;
-        Vector2 _startPosition;
-        Vector2 _lastDelta;
-        Vector2 _inertiaVelocity;
-        bool _isDragging;
+        float _startPosition;
+        float _lastDelta;
+        float _inertia;
         float _elasticity;
-        Axis _axis;
+        bool _isDragging;
 
-        public void Init(RectTransform viewport, float speedCoef, float inertiaCoef, float elasticityCoef, Axis axis)
+        public void Init(RectTransform viewport, Axis axis, float speedCoef, float inertiaCoef, float elasticityCoef)
         {
             _viewport = viewport;
             _speedCoef = speedCoef;
@@ -28,35 +28,32 @@ namespace DynamicScroll.Internal
             _axis = axis;
         }
 
-        public void SetEdgeDelta(Vector2 edgeDelta)
+        public void SetEdgeDelta(float edgeDelta)
         {
-            Vector2 edgeDeltaAxis = edgeDelta * AxisMaskDesc.AxisMasks[_axis];
             if (_isDragging)
             {
-                Vector2 viewportSize = _viewport.rect.size;
-                float normalizedX = Mathf.Abs(edgeDeltaAxis.x / viewportSize.x);
-                float normalizedY = Mathf.Abs(edgeDeltaAxis.y / viewportSize.y);
-                _elasticity = 1f - Mathf.Clamp01(new Vector2(normalizedX, normalizedY).magnitude);
+                float viewportSizeFloat = Helpers.GetVectorComponent(_viewport.rect.size, _axis);
+                _elasticity = 1f - Mathf.Clamp01(Mathf.Abs(edgeDelta) / viewportSizeFloat);
             }
 
-            if (edgeDeltaAxis.sqrMagnitude > 0f)
-                _inertiaVelocity = edgeDeltaAxis * _elasticityCoef;
+            if (!Helpers.IsZeroValue(edgeDelta))
+                _inertia = edgeDelta * _elasticityCoef;
         }
 
-        void OnScroll(Vector2 delta)
+        void OnScroll(float delta)
         {
             onScroll?.Invoke(delta);
         }
 
         void LateUpdate()
         {
-            if (_isDragging || !DynamicScrollHelpers.CheckVectorMagnitude(_inertiaVelocity))
+            if (_isDragging || Helpers.IsZeroValue(_inertia))
                 return;
 
             float dt = Time.unscaledDeltaTime;
             float timeStep = _speedCoef * dt;
-            Vector2 delta = _inertiaVelocity * timeStep;
-            _inertiaVelocity *= 1f - Mathf.Clamp01(dt * _inertiaCoef);
+            float delta = _inertia * timeStep;
+            _inertia *= 1f - Mathf.Clamp01(dt * _inertiaCoef);
 
             OnScroll(delta);
         }
@@ -67,10 +64,11 @@ namespace DynamicScroll.Internal
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (GetLocalPosition(eventData, out _startPosition))
+            if (GetLocalPosition(eventData, out Vector2 startPosition))
             {
+                _startPosition = Helpers.GetVectorComponent(startPosition, _axis);
                 _isDragging = true;
-                _inertiaVelocity = Vector2.zero;
+                _inertia = 0f;
                 _elasticity = 1f;
             }
         }
@@ -80,8 +78,8 @@ namespace DynamicScroll.Internal
             if (!_isDragging)
                 return;
 
-            Vector2 delta = GetDeltaPosition(eventData);
-            if (DynamicScrollHelpers.CheckVectorMagnitude(delta))
+            float delta = GetDeltaPosition(eventData);
+            if (!Helpers.IsZeroValue(delta))
                 _lastDelta = delta;
 
             OnScroll(delta);
@@ -92,8 +90,8 @@ namespace DynamicScroll.Internal
             if (!_isDragging)
                 return;
 
-            Vector2 delta = GetDeltaPosition(eventData);
-            _inertiaVelocity = _lastDelta + delta;
+            float delta = GetDeltaPosition(eventData);
+            _inertia = _lastDelta + delta;
             _isDragging = false;
 
             OnScroll(delta);
@@ -103,15 +101,16 @@ namespace DynamicScroll.Internal
         // Helpers
         //
 
-        Vector2 GetDeltaPosition(PointerEventData eventData)
+        float GetDeltaPosition(PointerEventData eventData)
         {
-            GetLocalPosition(eventData, out Vector2 finishPosition);
-            Vector2 deltaAxis = (finishPosition - _startPosition) * AxisMaskDesc.AxisMasks[_axis];
+            GetLocalPosition(eventData, out Vector2 finishPositionVector);
+            float finishPosition = Helpers.GetVectorComponent(finishPositionVector, _axis);
+            float delta = finishPosition - _startPosition;
             _startPosition = finishPosition;
 
             if (_elasticity < 1f)
-                deltaAxis *= _elasticity * _elasticityCoef;
-            return deltaAxis;
+                delta *= _elasticity * _elasticityCoef;
+            return delta;
         }
 
         bool GetLocalPosition(PointerEventData eventData, out Vector2 position)
