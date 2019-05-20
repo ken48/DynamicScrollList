@@ -6,7 +6,6 @@ using UnityEngine.UI;
 
 namespace DynamicScroll.Internal
 {
-    // Todo: bring order to the approach: 1-floating number or vector approach
     internal class WidgetsViewport
     {
         readonly RectTransform _node;
