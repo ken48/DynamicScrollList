@@ -16,6 +16,7 @@ namespace DynamicScroll
         GameObject go { get; }
         RectTransform rectTransform { get; }
         void Fill(IItem item);
+        void RecalcRect();
     }
 
     public interface IWidgetsProvider

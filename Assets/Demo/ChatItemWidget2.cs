@@ -15,10 +15,21 @@ public class ChatItemWidget2 : MonoBehaviour, IWidget
     Text _message;
     [SerializeField]
     Text _stamp;
+    [SerializeField]
+    RectTransform _rectTransform;
+    [SerializeField]
+    ContentSizeFitter _contentSizeFitter;
 
     public void Fill(IItem item)
     {
         FillInternal((ChatItem2)item);
+    }
+
+    public void RecalcRect()
+    {
+        _contentSizeFitter.enabled = true;
+        LayoutRebuilder.ForceRebuildLayoutImmediate(_rectTransform);
+        _contentSizeFitter.enabled = false;
     }
 
     void FillInternal(ChatItem2 item)

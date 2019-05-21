@@ -69,7 +69,7 @@ namespace DynamicScroll.Internal
 
             RectTransform widgetRectTransform = widget.rectTransform;
             SetPivotAndAnchors(widgetRectTransform);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(widget.rectTransform);
+            widget.RecalcRect();
 
             // Change edge last position
             WidgetsAlignment itemWidgetEdge = GetItemWidgetEdge(itemEdge);
@@ -77,7 +77,7 @@ namespace DynamicScroll.Internal
             float nextPositionFloat = _edgesLastPositions[itemWidgetEdge] + _spacing * inflationMask;
             Vector2 axisMask = AxisMaskDesc.AxisMasks[_axis];
             Vector2 nextWidgetPosition = nextPositionFloat * axisMask;
-            Vector2 newEdgesLastPositions = nextWidgetPosition + widget.rectTransform.rect.size * axisMask * inflationMask;
+            Vector2 newEdgesLastPositions = nextWidgetPosition + widgetRectTransform.rect.size * axisMask * inflationMask;
             _edgesLastPositions[itemWidgetEdge] = Helpers.GetVectorComponent(newEdgesLastPositions, _axis);
 
             switch (itemEdge)
