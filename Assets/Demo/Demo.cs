@@ -2,8 +2,6 @@
 using UnityEngine;
 using DynamicScroll;
 
-// Todo: demo chat application
-
 public class Demo : MonoBehaviour
 {
     [SerializeField]
