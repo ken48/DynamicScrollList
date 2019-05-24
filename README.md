@@ -2,5 +2,5 @@
 Dynamic scroll list for Unity UI
 
 It is convenient for chats, leaderboards, list of found results.
-When the elements are thousands you can scroll them with no lags.
+You can scroll infinite sets of elements with no CPU spikes.
 Tested on mobile platforms.
