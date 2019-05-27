@@ -54,7 +54,7 @@ namespace DynamicScroll
         public void Init(IItemsProvider itemsProvider, IWidgetsProvider widgetsProvider)
         {
             _itemsProvider = itemsProvider;
-            _itemsViewport = new ItemsViewport(itemsProvider, 41);
+            _itemsViewport = new ItemsViewport(itemsProvider);
             _widgetsViewport = new WidgetsViewport(_contentNode, widgetsProvider, _alignment, _spacing);
 
             _scroller = GetComponent<Scroller>();
