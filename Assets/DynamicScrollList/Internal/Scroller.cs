@@ -31,20 +31,18 @@ namespace DynamicScroll.Internal
 
         public void SetEdgeDelta(float edgeDelta, bool immediate)
         {
-            if (immediate)
-            {
-                OnScroll(edgeDelta);
-                return;
-            }
-
             if (_isDragging)
             {
                 float viewportSizeFloat = Helpers.GetVectorComponent(_viewport.rect.size, _axis);
                 _elasticity = 1f - Mathf.Clamp01(Mathf.Abs(edgeDelta) / viewportSizeFloat);
             }
-
-            if (!Helpers.IsZeroValue(edgeDelta))
-                _inertia = edgeDelta * _elasticityCoef;
+            else if (!Helpers.IsZeroValue(edgeDelta))
+            {
+                if (immediate)
+                    OnScroll(edgeDelta);
+                else
+                    _inertia = edgeDelta * _elasticityCoef;
+            }
         }
 
         void OnScroll(float delta)
@@ -54,7 +52,7 @@ namespace DynamicScroll.Internal
 
         void LateUpdate()
         {
-            if (_isDragging || Helpers.IsZeroValue(_inertia))
+            if (Helpers.IsZeroValue(_inertia))
                 return;
 
             float dt = Time.unscaledDeltaTime;
