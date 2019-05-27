@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 
 namespace DynamicScroll.Internal
 {
-    internal class Scroller : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    internal class Scroller : MonoBehaviour, IInitializePotentialDragHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         public event Action<float> onScroll;
 
@@ -18,6 +18,7 @@ namespace DynamicScroll.Internal
         float _inertia;
         float _elasticity;
         bool _isDragging;
+        Component _parentHandler;
 
         public void Init(RectTransform viewport, Axis axis, float speedCoef, float inertiaCoef, float elasticityCoef)
         {
@@ -62,8 +63,26 @@ namespace DynamicScroll.Internal
         // Drag handlers
         //
 
+        public void OnInitializePotentialDrag (PointerEventData eventData)
+        {
+            GetParentHandler<IInitializePotentialDragHandler>()?.OnInitializePotentialDrag(eventData);
+        }
+
         public void OnBeginDrag(PointerEventData eventData)
         {
+            bool isShiftX = Mathf.Abs(eventData.delta.x) > Mathf.Abs(eventData.delta.y);
+            bool routeToParent = _axis == Axis.Y && isShiftX || _axis == Axis.X && !isShiftX;
+            if (routeToParent)
+            {
+                var parentBeginDragHandler = GetParentHandler<IBeginDragHandler>();
+                if (parentBeginDragHandler != null)
+                {
+                    parentBeginDragHandler.OnBeginDrag(eventData);
+                    _parentHandler = (Component)parentBeginDragHandler;
+                    return;
+                }
+            }
+
             if (GetLocalPosition(eventData, out Vector2 startPosition))
             {
                 _startPosition = Helpers.GetVectorComponent(startPosition, _axis);
@@ -76,7 +95,11 @@ namespace DynamicScroll.Internal
         public void OnDrag(PointerEventData eventData)
         {
             if (!_isDragging)
+            {
+                if (_parentHandler != null && _parentHandler is IDragHandler parentDragHandler)
+                    parentDragHandler.OnDrag(eventData);
                 return;
+            }
 
             float delta = GetDeltaPosition(eventData);
             if (!Helpers.IsZeroValue(delta))
@@ -88,7 +111,15 @@ namespace DynamicScroll.Internal
         public void OnEndDrag(PointerEventData eventData)
         {
             if (!_isDragging)
+            {
+                if (_parentHandler != null)
+                {
+                    if (_parentHandler is IEndDragHandler parentEndDragHandler)
+                        parentEndDragHandler.OnEndDrag(eventData);
+                    _parentHandler = null;
+                }
                 return;
+            }
 
             float delta = GetDeltaPosition(eventData);
             _inertia = _lastDelta + delta;
@@ -100,6 +131,12 @@ namespace DynamicScroll.Internal
         //
         // Helpers
         //
+
+        T GetParentHandler<T>() where T : class, IEventSystemHandler
+        {
+            Transform parent = transform.parent;
+            return parent != null ? parent.GetComponentInParent(typeof(T)) as T : null;
+        }
 
         float GetDeltaPosition(PointerEventData eventData)
         {
