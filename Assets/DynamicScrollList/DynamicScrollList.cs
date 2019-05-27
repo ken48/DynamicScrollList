@@ -54,16 +54,16 @@ namespace DynamicScroll
         public void Init(IItemsProvider itemsProvider, IWidgetsProvider widgetsProvider)
         {
             _itemsProvider = itemsProvider;
-            _itemsViewport = new ItemsViewport(itemsProvider);
+            _itemsViewport = new ItemsViewport(itemsProvider, 41);
             _widgetsViewport = new WidgetsViewport(_contentNode, widgetsProvider, _alignment, _spacing);
 
             _scroller = GetComponent<Scroller>();
             _scroller.Init(_viewportNode, AxisMaskDesc.WidgetsAlignmentAxis[_alignment], _speedCoef, _inertiaCoef, _elasticityCoef);
 
-            // Initial refresh
-            RefreshViewport(ItemsEdge.Tail);
-
             _scroller.onScroll += OnScroll;
+
+            // Initial refresh
+            RefreshViewport(ItemsEdge.Tail, true);
         }
 
         public void Shutdown()
@@ -76,15 +76,15 @@ namespace DynamicScroll
         {
             ItemsEdge? inflationEdge = _widgetsViewport.Move(delta);
             if (inflationEdge.HasValue)
-                RefreshViewport(inflationEdge.Value);
+                RefreshViewport(inflationEdge.Value, false);
         }
 
-        void RefreshViewport(ItemsEdge inflationEdge)
+        void RefreshViewport(ItemsEdge inflationEdge, bool adjustEdgeImmediate)
         {
             Rect viewportWorldRect = Helpers.GetWorldRect(_viewportNode);
             while (TryDeflate(ItemsEdgeDesc.Opposites[inflationEdge], viewportWorldRect));
             while (TryInflate(inflationEdge, viewportWorldRect));
-            _scroller.SetEdgeDelta(GetEdgeDelta(viewportWorldRect));
+            _scroller.SetEdgeDelta(GetEdgeDelta(viewportWorldRect), adjustEdgeImmediate);
         }
 
         bool TryInflate(ItemsEdge edge, Rect viewportWorldRect)

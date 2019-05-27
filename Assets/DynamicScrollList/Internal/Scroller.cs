@@ -29,8 +29,14 @@ namespace DynamicScroll.Internal
             _axis = axis;
         }
 
-        public void SetEdgeDelta(float edgeDelta)
+        public void SetEdgeDelta(float edgeDelta, bool immediate)
         {
+            if (immediate)
+            {
+                OnScroll(edgeDelta);
+                return;
+            }
+
             if (_isDragging)
             {
                 float viewportSizeFloat = Helpers.GetVectorComponent(_viewport.rect.size, _axis);
