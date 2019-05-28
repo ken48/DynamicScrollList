@@ -8,14 +8,11 @@ namespace DynamicScroll.Internal
         readonly Dictionary<ItemsEdge, int> _itemsIndices;
         readonly IItemsProvider _itemsProvider;
 
-        public ItemsViewport(IItemsProvider itemsProvider, int startIndex)
+        public ItemsViewport(IItemsProvider itemsProvider)
         {
             _itemsProvider = itemsProvider;
-            _itemsIndices = new Dictionary<ItemsEdge, int>
-            {
-                { ItemsEdge.Head, startIndex },
-                { ItemsEdge.Tail, startIndex - 1 },
-            };
+            _itemsIndices = new Dictionary<ItemsEdge, int>();
+            ResetToIndex(0);
         }
 
         public bool TryInflate(ItemsEdge edge)
@@ -49,6 +46,15 @@ namespace DynamicScroll.Internal
         public bool CheckEdge(ItemsEdge edge)
         {
             return !CheckItem(_itemsIndices[edge] + ItemsEdgeDesc.InflationSigns[edge]);
+        }
+
+        public void ResetToIndex(int index)
+        {
+            if (!CheckItem(index))
+                throw new Exception($"Wrong index to reset {index}");
+
+            _itemsIndices[ItemsEdge.Head] = index;
+            _itemsIndices[ItemsEdge.Tail] = index - 1;
         }
 
         bool IsEmpty()

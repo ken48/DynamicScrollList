@@ -23,17 +23,27 @@ namespace DynamicScroll.Internal
             _alignment = alignment;
             _spacing = spacing;
             _axis = AxisMaskDesc.WidgetsAlignmentAxis[_alignment];
-
-            _edgesLastPositions = new Dictionary<WidgetsAlignment, float>
-            {
-                { _alignment, 0f },
-                { WidgetsAlignmentDesc.OppositeEdges[_alignment], _spacing * WidgetsAlignmentDesc.HeadInflationMasks[_alignment] },
-            };
+            _edgesLastPositions = new Dictionary<WidgetsAlignment, float>();
 
             SetPivotAndAnchors(_node);
+            Reset();
         }
 
-        public void Clear()
+        public void Reset()
+        {
+            _node.anchoredPosition = Vector2.zero;
+
+            _edgesLastPositions[_alignment] = 0f;
+            _edgesLastPositions[WidgetsAlignmentDesc.OppositeEdges[_alignment]] = _spacing * WidgetsAlignmentDesc.HeadInflationMasks[_alignment];
+
+            while (_widgets.Count > 0)
+            {
+                _itemWidgetsPool.ReturnWidget(_widgets[0]);
+                _widgets.RemoveAt(0);
+            }
+        }
+
+        public void Shutdown()
         {
             _itemWidgetsPool.Clear();
         }
@@ -118,6 +128,14 @@ namespace DynamicScroll.Internal
             float inflationMask = WidgetsAlignmentDesc.HeadInflationMasks[itemWidgetEdge];
             var res = (viewportEdgePosition - Helpers.GetVectorComponent(startPos, _axis)) * inflationMask;
             return res > 0f ? res * inflationMask / Helpers.GetVectorComponent(_node.lossyScale, _axis) : 0f;
+        }
+
+        public Vector2 GetHeadWorldPosition()
+        {
+            if (IsEmpty())
+                throw new Exception("Empty widgets viewport");
+
+            return Helpers.GetWorldRect(GetEdgeWidget(ItemsEdge.Head).rectTransform).center;
         }
 
         bool IsEmpty()

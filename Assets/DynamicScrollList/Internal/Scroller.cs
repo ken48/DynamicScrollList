@@ -41,8 +41,17 @@ namespace DynamicScroll.Internal
                 if (immediate)
                     OnScroll(edgeDelta);
                 else
-                    _inertia = edgeDelta * _elasticityCoef;
+                    _inertia = edgeDelta; // Todo: make elasticity inertia more gentle
             }
+        }
+
+        public void StopScrolling()
+        {
+            if (!Helpers.IsZeroValue(_inertia))
+                OnScroll(_inertia);
+
+            _isDragging = false;
+            _inertia = 0f;
         }
 
         void OnScroll(float delta)

@@ -14,7 +14,6 @@ namespace DynamicScroll
     }
 
     // Todo: adding, deleting, changing of element on fly
-    // Todo: navigation to some data index
 
     [RequireComponent(typeof(Scroller))]
     public class DynamicScrollList : MonoBehaviour
@@ -54,7 +53,7 @@ namespace DynamicScroll
         public void Init(IItemsProvider itemsProvider, IWidgetsProvider widgetsProvider, int startItemIndex)
         {
             _itemsProvider = itemsProvider;
-            _itemsViewport = new ItemsViewport(itemsProvider, startItemIndex);
+            _itemsViewport = new ItemsViewport(itemsProvider);
             _widgetsViewport = new WidgetsViewport(_contentNode, widgetsProvider, _alignment, _spacing);
 
             _scroller = GetComponent<Scroller>();
@@ -62,14 +61,27 @@ namespace DynamicScroll
 
             _scroller.onScroll += OnScroll;
 
-            // Initial refresh
+            _itemsViewport.ResetToIndex(startItemIndex);
             RefreshViewport(ItemsEdge.Tail, true);
         }
 
         public void Shutdown()
         {
             _scroller.onScroll -= OnScroll;
-            _widgetsViewport.Clear();
+            _widgetsViewport.Shutdown();
+        }
+
+        public void CenterOnIndex(int index, float duration = 0f)
+        {
+            _scroller.StopScrolling();
+            _itemsViewport.ResetToIndex(index);
+            _widgetsViewport.Reset();
+            RefreshViewport(ItemsEdge.Tail, true);
+
+            // Todo: move to WidgetsViewport
+            Vector2 headWorldPosition = _widgetsViewport.GetHeadWorldPosition();
+            Vector2 viewportWorldRect = Helpers.GetWorldRect(_viewportNode).center;
+            OnScroll(Helpers.GetVectorComponent((viewportWorldRect - headWorldPosition) / _contentNode.lossyScale, Axis.Y));
         }
 
         void OnScroll(float delta)
