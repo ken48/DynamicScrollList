@@ -74,6 +74,8 @@ namespace DynamicScroll
         public void CenterOnIndex(int index, float duration = 0f)
         {
             _scroller.StopScrolling();
+
+            // Todo: check if widget already inside viewport
             _itemsViewport.ResetToIndex(index);
             _widgetsViewport.Reset();
             RefreshViewport(ItemsEdge.Tail, true);
