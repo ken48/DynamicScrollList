@@ -8,7 +8,7 @@ namespace DynamicScroll.Internal
         readonly Dictionary<ItemsEdge, int> _itemsIndices;
         readonly IItemsProvider _itemsProvider;
 
-        public ItemsViewport(IItemsProvider itemsProvider, int startIndex = 0)
+        public ItemsViewport(IItemsProvider itemsProvider, int startIndex)
         {
             _itemsProvider = itemsProvider;
             _itemsIndices = new Dictionary<ItemsEdge, int>

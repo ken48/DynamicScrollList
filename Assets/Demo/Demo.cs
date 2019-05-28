@@ -22,7 +22,7 @@ public class Demo : MonoBehaviour
         for (int i = 0; i < chatItems.Length; i++)
             chatItems[i] = UnityEngine.Random.value < 0.5f ? Helpers.GenerateChatItem1() : Helpers.GenerateChatItem2();
 
-        _scrollList.Init(new ChatItemsProvider(chatItems), new ChatItemWidgetsProvider());
+        _scrollList.Init(new ChatItemsProvider(chatItems), new ChatItemWidgetsProvider(), 0);
     }
 
     void OnDestroy()

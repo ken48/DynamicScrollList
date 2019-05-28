@@ -51,10 +51,10 @@ namespace DynamicScroll
             _elasticityCoef = 0.5f;
         }
 
-        public void Init(IItemsProvider itemsProvider, IWidgetsProvider widgetsProvider)
+        public void Init(IItemsProvider itemsProvider, IWidgetsProvider widgetsProvider, int startItemIndex)
         {
             _itemsProvider = itemsProvider;
-            _itemsViewport = new ItemsViewport(itemsProvider);
+            _itemsViewport = new ItemsViewport(itemsProvider, startItemIndex);
             _widgetsViewport = new WidgetsViewport(_contentNode, widgetsProvider, _alignment, _spacing);
 
             _scroller = GetComponent<Scroller>();
