@@ -36,7 +36,7 @@ public class Demo : MonoBehaviour
     // Start instead of Awake due to OnScroll on ScrollList.Init
     void Start()
     {
-        _scrollList.Init(_itemsProvider, new ChatItemWidgetsProvider(), 0);
+        _scrollList.Init(_itemsProvider, new ChatItemWidgetsProvider());
     }
 
     void OnDestroy()

@@ -50,7 +50,7 @@ namespace DynamicScroll
             _elasticityCoef = 0.5f;
         }
 
-        public void Init(IItemsProvider itemsProvider, IWidgetsProvider widgetsProvider, int startItemIndex)
+        public void Init(IItemsProvider itemsProvider, IWidgetsProvider widgetsProvider)
         {
             _itemsProvider = itemsProvider;
             _itemsViewport = new ItemsViewport(itemsProvider);
@@ -61,7 +61,6 @@ namespace DynamicScroll
 
             _scroller.onScroll += OnScroll;
 
-            _itemsViewport.ResetToIndex(startItemIndex);
             RefreshViewport(ItemsEdge.Tail, true);
         }
 
