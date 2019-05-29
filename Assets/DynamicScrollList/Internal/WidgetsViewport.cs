@@ -130,12 +130,12 @@ namespace DynamicScroll.Internal
             return res > 0f ? res * inflationMask / Helpers.GetVectorComponent(_node.lossyScale, _axis) : 0f;
         }
 
-        public Vector2 GetHeadWorldPosition()
+        public Vector2 GetWidgetWorldPositionByRelativeIndex(int relativeIndex)
         {
-            if (IsEmpty())
-                throw new Exception("Empty widgets viewport");
+            if (relativeIndex < 0 || relativeIndex >= _widgets.Count)
+                throw new Exception($"Invalid relative index {relativeIndex} {_widgets.Count}");
 
-            return Helpers.GetWorldRect(GetEdgeWidget(ItemsEdge.Head).rectTransform).center;
+            return Helpers.GetWorldRect(_widgets[relativeIndex].rectTransform).center;
         }
 
         bool IsEmpty()

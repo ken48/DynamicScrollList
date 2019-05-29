@@ -30,7 +30,7 @@ public class Demo : MonoBehaviour
             chatItems[i] = UnityEngine.Random.value < 0.5f ? Helpers.GenerateChatItem1() : Helpers.GenerateChatItem2();
         _itemsProvider = new ChatItemsProvider(chatItems);
 
-        _toIndexBtn.onClick.AddListener(() => _scrollList.CenterOnIndex(_toIndex));
+        _toIndexBtn.onClick.AddListener(() => _scrollList.CenterOnIndex(_toIndex, false));
     }
 
     // Start instead of Awake due to OnScroll on ScrollList.Init

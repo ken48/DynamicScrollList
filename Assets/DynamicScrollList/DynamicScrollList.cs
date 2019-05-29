@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 
 namespace DynamicScroll
@@ -16,6 +17,7 @@ namespace DynamicScroll
     // Todo: adding, deleting, changing of element on fly
 
     [RequireComponent(typeof(Scroller))]
+    [RequireComponent(typeof(ScrollNavigation))]
     public class DynamicScrollList : MonoBehaviour
     {
         [SerializeField]
@@ -41,6 +43,7 @@ namespace DynamicScroll
         ItemsViewport _itemsViewport;
         WidgetsViewport _widgetsViewport;
         Scroller _scroller;
+        ScrollNavigation _scrollNavigation;
 
         void Reset()
         {
@@ -58,8 +61,11 @@ namespace DynamicScroll
 
             _scroller = GetComponent<Scroller>();
             _scroller.Init(_viewportNode, AxisMaskDesc.WidgetsAlignmentAxis[_alignment], _speedCoef, _inertiaCoef, _elasticityCoef);
-
             _scroller.onScroll += OnScroll;
+
+            _scrollNavigation = GetComponent<ScrollNavigation>();
+            _scrollNavigation.Init();
+            _scrollNavigation.onScroll += OnScroll;
 
             RefreshViewport(ItemsEdge.Tail, true);
         }
@@ -70,19 +76,9 @@ namespace DynamicScroll
             _widgetsViewport.Shutdown();
         }
 
-        public void CenterOnIndex(int index, float duration = 0f)
+        public void CenterOnIndex(int index, bool immediate)
         {
-            _scroller.StopScrolling();
-
-            // Todo: check if widget already inside viewport
-            _itemsViewport.ResetToIndex(index);
-            _widgetsViewport.Reset();
-            RefreshViewport(ItemsEdge.Tail, true);
-
-            // Todo: move to WidgetsViewport
-            Vector2 headWorldPosition = _widgetsViewport.GetHeadWorldPosition();
-            Vector2 viewportWorldRect = Helpers.GetWorldRect(_viewportNode).center;
-            OnScroll(Helpers.GetVectorComponent((viewportWorldRect - headWorldPosition) / _contentNode.lossyScale, Axis.Y));
+            
         }
 
         void OnScroll(float delta)

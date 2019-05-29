@@ -375,7 +375,7 @@ MonoBehaviour:
   _fpsCoef: 1
   _itemsCount: 42
   _toIndexBtn: {fileID: 1827541201}
-  _toIndexFloat: 0.5
+  _toIndex: 19
 --- !u!20 &1763818151
 Camera:
   m_ObjectHideFlags: 0
@@ -385,7 +385,7 @@ Camera:
   m_GameObject: {fileID: 1763818149}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
+  m_ClearFlags: 2
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_SensorSize: {x: 36, y: 24}

@@ -57,6 +57,16 @@ namespace DynamicScroll.Internal
             _itemsIndices[ItemsEdge.Tail] = index - 1;
         }
 
+        public bool IsItemInsideViewport(int index)
+        {
+            return index >= _itemsIndices[ItemsEdge.Head] && index <= _itemsIndices[ItemsEdge.Tail];
+        }
+
+        public int GetItemRelativeIndex(int index)
+        {
+            return index - _itemsIndices[ItemsEdge.Head];
+        }
+
         bool IsEmpty()
         {
             return _itemsIndices[ItemsEdge.Head] > _itemsIndices[ItemsEdge.Tail];

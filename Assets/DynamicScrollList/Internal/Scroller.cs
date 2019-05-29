@@ -19,6 +19,7 @@ namespace DynamicScroll.Internal
         float _elasticity;
         float _lastEdgeDelta;
         bool _isDragging;
+        bool _isLocked;
         Component _parentHandler;
 
         public void Init(RectTransform viewport, Axis axis, float speedCoef, float inertiaCoef, float elasticityCoef)
@@ -58,6 +59,11 @@ namespace DynamicScroll.Internal
             _isDragging = false;
         }
 
+        public void SetLocked(bool value)
+        {
+            _isLocked = value;
+        }
+
         void OnScroll(float delta)
         {
             onScroll?.Invoke(delta);
@@ -72,6 +78,9 @@ namespace DynamicScroll.Internal
 
         void LateUpdate()
         {
+            if (_isLocked)
+                return;
+
             if (Helpers.IsZeroValue(_inertia))
                 return;
 
@@ -106,6 +115,9 @@ namespace DynamicScroll.Internal
                     return;
                 }
             }
+
+            if (_isLocked)
+                return;
 
             if (GetLocalPosition(eventData, out Vector2 startPosition))
             {
