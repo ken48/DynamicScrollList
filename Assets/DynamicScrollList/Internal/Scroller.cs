@@ -17,6 +17,7 @@ namespace DynamicScroll.Internal
         float _lastDelta;
         float _inertia;
         float _elasticity;
+        float _lastEdgeDelta;
         bool _isDragging;
         Component _parentHandler;
 
@@ -35,28 +36,38 @@ namespace DynamicScroll.Internal
             {
                 float viewportSizeFloat = Helpers.GetVectorComponent(_viewport.rect.size, _axis);
                 _elasticity = 1f - Mathf.Clamp01(Mathf.Abs(edgeDelta) / viewportSizeFloat);
+                _inertia = 0f;
             }
             else if (!Helpers.IsZeroValue(edgeDelta))
             {
                 if (immediate)
                     OnScroll(edgeDelta);
                 else
-                    _inertia = edgeDelta; // Todo: make elasticity inertia more gentle
+                    _inertia = edgeDelta * _elasticityCoef;
             }
+
+            _lastEdgeDelta = edgeDelta;
         }
 
         public void StopScrolling()
         {
-            if (!Helpers.IsZeroValue(_inertia))
-                OnScroll(_inertia);
+            if (!Helpers.IsZeroValue(_lastEdgeDelta))
+                OnScroll(_lastEdgeDelta);
 
+            ResetScrollingCache();
             _isDragging = false;
-            _inertia = 0f;
         }
 
         void OnScroll(float delta)
         {
             onScroll?.Invoke(delta);
+        }
+
+        void ResetScrollingCache()
+        {
+            _inertia = 0f;
+            _elasticity = 1f;
+            _lastEdgeDelta = 0f;
         }
 
         void LateUpdate()
@@ -98,10 +109,9 @@ namespace DynamicScroll.Internal
 
             if (GetLocalPosition(eventData, out Vector2 startPosition))
             {
+                ResetScrollingCache();
                 _startPosition = Helpers.GetVectorComponent(startPosition, _axis);
                 _isDragging = true;
-                _inertia = 0f;
-                _elasticity = 1f;
             }
         }
 
