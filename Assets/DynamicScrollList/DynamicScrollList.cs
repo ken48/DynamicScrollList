@@ -64,10 +64,10 @@ namespace DynamicScroll
             _scroller.onScroll += OnScroll;
 
             _scrollNavigation = GetComponent<ScrollNavigation>();
-            _scrollNavigation.Init();
+            _scrollNavigation.Init(_itemsViewport, _widgetsViewport, _viewportNode, _contentNode, InitialRefreshViewport);
             _scrollNavigation.onScroll += OnScroll;
 
-            RefreshViewport(ItemsEdge.Tail, true);
+            InitialRefreshViewport();
         }
 
         public void Shutdown()
@@ -78,7 +78,7 @@ namespace DynamicScroll
 
         public void CenterOnIndex(int index, bool immediate)
         {
-            
+            _scrollNavigation.CenterOnIndex(index, immediate);
         }
 
         void OnScroll(float delta)
@@ -86,6 +86,11 @@ namespace DynamicScroll
             ItemsEdge? inflationEdge = _widgetsViewport.Move(delta);
             if (inflationEdge.HasValue)
                 RefreshViewport(inflationEdge.Value, false);
+        }
+
+        void InitialRefreshViewport()
+        {
+            RefreshViewport(ItemsEdge.Tail, true);
         }
 
         void RefreshViewport(ItemsEdge inflationEdge, bool adjustEdgeImmediate)
