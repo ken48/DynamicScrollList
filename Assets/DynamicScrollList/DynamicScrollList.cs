@@ -64,7 +64,7 @@ namespace DynamicScroll
             _scroller.onScroll += OnScroll;
 
             _scrollNavigation = GetComponent<ScrollNavigation>();
-            _scrollNavigation.Init(_itemsViewport, _widgetsViewport, _viewportNode, _contentNode, InitialRefreshViewport);
+            _scrollNavigation.Init(_itemsViewport, _widgetsViewport, InitialRefreshViewport);
             _scrollNavigation.onScroll += OnScrollNavigation;
             _scrollNavigation.onScrollStarted += OnScrollNavigationStarted;
             _scrollNavigation.onScrollFinished += OnScrollNavigationFinished;
@@ -83,7 +83,7 @@ namespace DynamicScroll
 
         public void CenterOnIndex(int index, bool immediate)
         {
-            _scrollNavigation.CenterOnIndex(index, immediate);
+            _scrollNavigation.CenterOnIndex(index, Helpers.GetWorldRect(_viewportNode), immediate);
         }
 
         void InitialRefreshViewport()

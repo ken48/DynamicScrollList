@@ -14,18 +14,13 @@ namespace DynamicScroll.Internal
 
         ItemsViewport _itemsViewport;
         WidgetsViewport _widgetsViewport;
-        RectTransform _viewportNode;
-        RectTransform _contentNode;
         Action _refreshViewportFunc;
         Coroutine _centerOnIndexCo;
 
-        public void Init(ItemsViewport itemsViewport, WidgetsViewport widgetsViewport,
-            RectTransform viewportNode, RectTransform contentNode, Action refreshViewportFunc)
+        public void Init(ItemsViewport itemsViewport, WidgetsViewport widgetsViewport, Action refreshViewportFunc)
         {
             _itemsViewport = itemsViewport;
             _widgetsViewport = widgetsViewport;
-            _viewportNode = viewportNode;
-            _contentNode = contentNode;
             _refreshViewportFunc = refreshViewportFunc;
         }
 
@@ -34,31 +29,35 @@ namespace DynamicScroll.Internal
             TryFinishScrollProcess();
         }
 
-        public void CenterOnIndex(int index, bool immediate)
+        public void CenterOnIndex(int index, Rect viewportWorldRect, bool immediate)
         {
             TryFinishScrollProcess();
 
             onScrollStarted?.Invoke();
 
-            if (!_itemsViewport.IsItemInsideViewport(index))
+            bool needShift = !_itemsViewport.IsItemInsideViewport(index);
+            int prevHeadIndex = _itemsViewport.GetEdgeIndex(ItemsEdge.Head);
+            if (needShift)
             {
                 _itemsViewport.ResetToIndex(index);
                 _widgetsViewport.Reset();
                 _refreshViewportFunc();
+            }
 
-                // Todo: set position of needed index to appropriate viewport edge
+            int relativeIndex = _itemsViewport.GetItemRelativeIndex(index);
+            if (needShift)
+            {
+                // Set position of needed index to appropriate viewport edge
+                int deltaHeadIndex = index - prevHeadIndex;
+                ItemsEdge itemsEdgeDirection = deltaHeadIndex < 0 ? ItemsEdge.Head : ItemsEdge.Tail;
+
+                // Todo: move relativeIndex widget outside the viewport
                 // ...
             }
 
-            // Todo: consider edges
-            int relativeIndex = _itemsViewport.GetItemRelativeIndex(index);
-            Vector2 headWorldPosition = _widgetsViewport.GetWidgetWorldPositionByRelativeIndex(relativeIndex);
-            Rect viewportWorldRect = Helpers.GetWorldRect(_viewportNode);
+            Vector2 widgetWorldPosition = _widgetsViewport.GetWidgetWorldPositionByRelativeIndex(relativeIndex);
             Vector2 viewportWorldCenter = viewportWorldRect.center;
-
-            // Todo: AXIS
-            float totalDelta = Helpers.GetVectorComponent((viewportWorldCenter - headWorldPosition) / _contentNode.lossyScale, Axis.Y);
-
+            float totalDelta = _widgetsViewport.GetLocalCoordinate(viewportWorldCenter - widgetWorldPosition);
             if (immediate)
             {
                 OnScroll(totalDelta);

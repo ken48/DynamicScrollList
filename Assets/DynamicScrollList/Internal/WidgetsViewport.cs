@@ -138,6 +138,11 @@ namespace DynamicScroll.Internal
             return Helpers.GetWorldRect(_widgets[relativeIndex].rectTransform).center;
         }
 
+        public float GetLocalCoordinate(Vector2 worldCoordinates)
+        {
+            return Helpers.GetVectorComponent(worldCoordinates / _node.lossyScale, _axis);
+        }
+
         bool IsEmpty()
         {
             return _widgets.Count == 0;
