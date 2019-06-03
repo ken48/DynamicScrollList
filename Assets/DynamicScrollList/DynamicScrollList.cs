@@ -65,7 +65,7 @@ namespace DynamicScroll
 
             _scrollNavigation = GetComponent<ScrollNavigation>();
             _scrollNavigation.Init(_itemsViewport, _widgetsViewport, _viewportNode, _contentNode, InitialRefreshViewport);
-            _scrollNavigation.onScroll += OnScroll;
+            _scrollNavigation.onScroll += OnScrollNavigation;
             _scrollNavigation.onScrollStarted += OnScrollNavigationStarted;
             _scrollNavigation.onScrollFinished += OnScrollNavigationFinished;
 
@@ -75,7 +75,7 @@ namespace DynamicScroll
         public void Shutdown()
         {
             _scroller.onScroll -= OnScroll;
-            _scrollNavigation.onScroll -= OnScroll;
+            _scrollNavigation.onScroll -= OnScrollNavigation;
             _scrollNavigation.onScrollStarted -= OnScrollNavigationStarted;
             _scrollNavigation.onScrollFinished -= OnScrollNavigationFinished;
             _widgetsViewport.Shutdown();
@@ -86,11 +86,26 @@ namespace DynamicScroll
             _scrollNavigation.CenterOnIndex(index, immediate);
         }
 
-        void OnScroll(float delta)
+        void InitialRefreshViewport()
+        {
+            RefreshViewport(ItemsEdge.Tail, true);
+        }
+
+        void Scroll(float delta, bool adjustEdgeImmediate)
         {
             ItemsEdge? inflationEdge = _widgetsViewport.Move(delta);
             if (inflationEdge.HasValue)
-                RefreshViewport(inflationEdge.Value, false);
+                RefreshViewport(inflationEdge.Value, adjustEdgeImmediate);
+        }
+
+        void OnScroll(float delta)
+        {
+            Scroll(delta, false);
+        }
+
+        void OnScrollNavigation(float delta)
+        {
+            Scroll(delta, true);
         }
 
         void OnScrollNavigationStarted()
@@ -102,11 +117,6 @@ namespace DynamicScroll
         void OnScrollNavigationFinished()
         {
             _scroller.SetLocked(false);
-        }
-
-        void InitialRefreshViewport()
-        {
-            RefreshViewport(ItemsEdge.Tail, true);
         }
 
         void RefreshViewport(ItemsEdge inflationEdge, bool adjustEdgeImmediate)

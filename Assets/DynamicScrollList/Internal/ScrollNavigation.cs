@@ -59,15 +59,6 @@ namespace DynamicScroll.Internal
             // Todo: AXIS
             float totalDelta = Helpers.GetVectorComponent((viewportWorldCenter - headWorldPosition) / _contentNode.lossyScale, Axis.Y);
 
-            OnScroll(totalDelta);
-            float edgeDelta = GetEdgeDelta(viewportWorldRect);
-
-            // Todo: in scrollList.OnScroll this code brakes current logic
-            // _scroller.SetEdgeDelta(GetEdgeDelta(viewportWorldRect), adjustEdgeImmediate);
-
-            OnScroll(-totalDelta);
-            totalDelta += edgeDelta;
-
             if (immediate)
             {
                 OnScroll(totalDelta);
@@ -114,27 +105,6 @@ namespace DynamicScroll.Internal
         static float EasingOutQuad(float t)
         {
             return t * (2f - t);
-        }
-
-        //
-        // Todo: copypaste
-        //
-
-        float GetEdgeDelta(Rect viewportWorldRect)
-        {
-            foreach (ItemsEdge edge in GetEdges())
-                if (_itemsViewport.CheckEdge(edge))
-                    return _widgetsViewport.GetEdgeDelta(edge, viewportWorldRect);
-
-            return 0f;
-        }
-
-        static ItemsEdge[] _edges;
-        static ItemsEdge[] GetEdges()
-        {
-            if (_edges == null)
-                _edges = (ItemsEdge[])Enum.GetValues(typeof(ItemsEdge));
-            return _edges;
         }
     }
 }
