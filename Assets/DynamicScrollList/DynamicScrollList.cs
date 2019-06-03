@@ -66,6 +66,8 @@ namespace DynamicScroll
             _scrollNavigation = GetComponent<ScrollNavigation>();
             _scrollNavigation.Init(_itemsViewport, _widgetsViewport, _viewportNode, _contentNode, InitialRefreshViewport);
             _scrollNavigation.onScroll += OnScroll;
+            _scrollNavigation.onScrollStarted += OnScrollNavigationStarted;
+            _scrollNavigation.onScrollFinished += OnScrollNavigationFinished;
 
             InitialRefreshViewport();
         }
@@ -73,6 +75,9 @@ namespace DynamicScroll
         public void Shutdown()
         {
             _scroller.onScroll -= OnScroll;
+            _scrollNavigation.onScroll -= OnScroll;
+            _scrollNavigation.onScrollStarted -= OnScrollNavigationStarted;
+            _scrollNavigation.onScrollFinished -= OnScrollNavigationFinished;
             _widgetsViewport.Shutdown();
         }
 
@@ -86,6 +91,17 @@ namespace DynamicScroll
             ItemsEdge? inflationEdge = _widgetsViewport.Move(delta);
             if (inflationEdge.HasValue)
                 RefreshViewport(inflationEdge.Value, false);
+        }
+
+        void OnScrollNavigationStarted()
+        {
+            _scroller.StopScrolling();
+            _scroller.SetLocked(true);
+        }
+
+        void OnScrollNavigationFinished()
+        {
+            _scroller.SetLocked(false);
         }
 
         void InitialRefreshViewport()
@@ -104,9 +120,7 @@ namespace DynamicScroll
         bool TryInflate(ItemsEdge edge, Rect viewportWorldRect)
         {
             if (!_widgetsViewport.NeedInflate(edge, viewportWorldRect) || !_itemsViewport.TryInflate(edge))
-            {
                 return false;
-            }
 
             int index = _itemsViewport.GetEdgeIndex(edge);
             _widgetsViewport.Inflate(edge, _itemsProvider.GetItemByIndex(index));

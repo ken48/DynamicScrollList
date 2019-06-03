@@ -4,14 +4,14 @@ using UnityEngine;
 
 namespace DynamicScroll.Internal
 {
-    [RequireComponent(typeof(Scroller))]
     internal class ScrollNavigation : MonoBehaviour
     {
         const float Duration = 0.33f;
 
         public event Action<float> onScroll;
+        public event Action onScrollStarted;
+        public event Action onScrollFinished;
 
-        Scroller _scroller;
         ItemsViewport _itemsViewport;
         WidgetsViewport _widgetsViewport;
         RectTransform _viewportNode;
@@ -22,7 +22,6 @@ namespace DynamicScroll.Internal
         public void Init(ItemsViewport itemsViewport, WidgetsViewport widgetsViewport,
             RectTransform viewportNode, RectTransform contentNode, Action refreshViewportFunc)
         {
-            _scroller = GetComponent<Scroller>();
             _itemsViewport = itemsViewport;
             _widgetsViewport = widgetsViewport;
             _viewportNode = viewportNode;
@@ -32,24 +31,14 @@ namespace DynamicScroll.Internal
 
         void OnDisable()
         {
-            if (_centerOnIndexCo != null)
-            {
-                StopCoroutine(_centerOnIndexCo);
-                _centerOnIndexCo = null;
-                _scroller.SetLocked(false);
-            }
+            TryFinishScrollProcess();
         }
 
         public void CenterOnIndex(int index, bool immediate)
         {
-            _scroller.StopScrolling();
-            _scroller.SetLocked(true);
+            TryFinishScrollProcess();
 
-            if (_centerOnIndexCo != null)
-            {
-                StopCoroutine(_centerOnIndexCo);
-                _centerOnIndexCo = null;
-            }
+            onScrollStarted?.Invoke();
 
             if (!_itemsViewport.IsItemInsideViewport(index))
             {
@@ -76,40 +65,19 @@ namespace DynamicScroll.Internal
             // Todo: in scrollList.OnScroll this code brakes current logic
             // _scroller.SetEdgeDelta(GetEdgeDelta(viewportWorldRect), adjustEdgeImmediate);
 
-            // StartCoroutine(Test(totalDelta, edgeDelta));
-
             OnScroll(-totalDelta);
             totalDelta += edgeDelta;
 
             if (immediate)
             {
                 OnScroll(totalDelta);
-                _scroller.SetLocked(false);
+                onScrollFinished?.Invoke();
             }
             else
             {
                 _centerOnIndexCo = StartCoroutine(ScrollProcess(totalDelta));
             }
         }
-
-
-        IEnumerator Test(float totalDelta, float edgeDelta)
-        {
-
-            yield return new WaitForSecondsRealtime(2f);
-
-            Debug.Log("-  " + totalDelta);
-
-            OnScroll(-totalDelta);
-
-            yield return new WaitForSecondsRealtime(2f);
-
-            OnScroll(totalDelta + edgeDelta);
-
-            Debug.Log("+  " + totalDelta);
-        }
-
-
 
         IEnumerator ScrollProcess(float totalDelta)
         {
@@ -125,7 +93,17 @@ namespace DynamicScroll.Internal
                 yield return null;
             }
 
-            _scroller.SetLocked(false);
+            TryFinishScrollProcess();
+        }
+
+        void TryFinishScrollProcess()
+        {
+            if (_centerOnIndexCo == null)
+                return;
+
+            StopCoroutine(_centerOnIndexCo);
+            _centerOnIndexCo = null;
+            onScrollFinished?.Invoke();
         }
 
         void OnScroll(float delta)
