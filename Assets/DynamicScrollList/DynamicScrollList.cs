@@ -14,8 +14,6 @@ namespace DynamicScroll
         Top,
     }
 
-    // Todo: adding, deleting, changing of element on fly
-
     [RequireComponent(typeof(Scroller))]
     [RequireComponent(typeof(ScrollNavigation))]
     public class DynamicScrollList : MonoBehaviour
