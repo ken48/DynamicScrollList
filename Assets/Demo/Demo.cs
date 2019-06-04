@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.UI;
 using DynamicScroll;
 
 public class Demo : MonoBehaviour
@@ -12,17 +13,30 @@ public class Demo : MonoBehaviour
     [SerializeField]
     [Range(1, 100)]
     int _itemsCount = 20;
+    [SerializeField]
+    Button _toIndexBtn;
+    [SerializeField]
+    [Range(0, 99)]
+    int _toIndex = 19;
 
-    // Start instead of Awake due to OnScroll on ScrollList.Init
-    void Start()
+    ChatItemsProvider _itemsProvider;
+
+    void Awake()
     {
         QualitySettings.vSyncCount = 0;
 
         var chatItems = new ChatItem[_itemsCount];
         for (int i = 0; i < chatItems.Length; i++)
             chatItems[i] = UnityEngine.Random.value < 0.5f ? Helpers.GenerateChatItem1() : Helpers.GenerateChatItem2();
+        _itemsProvider = new ChatItemsProvider(chatItems);
 
-        _scrollList.Init(new ChatItemsProvider(chatItems), new ChatItemWidgetsProvider(), 0);
+        _toIndexBtn.onClick.AddListener(() => _scrollList.CenterOnIndex(_toIndex, false));
+    }
+
+    // Start instead of Awake due to OnScroll on ScrollList.Init
+    void Start()
+    {
+        _scrollList.Init(_itemsProvider, new ChatItemWidgetsProvider());
     }
 
     void OnDestroy()
@@ -33,6 +47,11 @@ public class Demo : MonoBehaviour
     void Update()
     {
         Application.targetFrameRate = Mathf.RoundToInt(60 * _fpsCoef);
+    }
+
+    void OnValidate()
+    {
+        _toIndex = Mathf.Clamp(_toIndex, 0, _itemsCount - 1);
     }
 }
 

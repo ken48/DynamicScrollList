@@ -17,7 +17,9 @@ namespace DynamicScroll.Internal
         float _lastDelta;
         float _inertia;
         float _elasticity;
+        float _lastEdgeDelta;
         bool _isDragging;
+        bool _isLocked;
         Component _parentHandler;
 
         public void Init(RectTransform viewport, Axis axis, float speedCoef, float inertiaCoef, float elasticityCoef)
@@ -35,6 +37,7 @@ namespace DynamicScroll.Internal
             {
                 float viewportSizeFloat = Helpers.GetVectorComponent(_viewport.rect.size, _axis);
                 _elasticity = 1f - Mathf.Clamp01(Mathf.Abs(edgeDelta) / viewportSizeFloat);
+                _inertia = 0f;
             }
             else if (!Helpers.IsZeroValue(edgeDelta))
             {
@@ -43,6 +46,22 @@ namespace DynamicScroll.Internal
                 else
                     _inertia = edgeDelta * _elasticityCoef;
             }
+
+            _lastEdgeDelta = edgeDelta;
+        }
+
+        public void StopScrolling()
+        {
+            if (!Helpers.IsZeroValue(_lastEdgeDelta))
+                OnScroll(_lastEdgeDelta);
+
+            ResetScrollingCache();
+            _isDragging = false;
+        }
+
+        public void SetLocked(bool value)
+        {
+            _isLocked = value;
         }
 
         void OnScroll(float delta)
@@ -50,8 +69,18 @@ namespace DynamicScroll.Internal
             onScroll?.Invoke(delta);
         }
 
+        void ResetScrollingCache()
+        {
+            _inertia = 0f;
+            _elasticity = 1f;
+            _lastEdgeDelta = 0f;
+        }
+
         void LateUpdate()
         {
+            if (_isLocked)
+                return;
+
             if (Helpers.IsZeroValue(_inertia))
                 return;
 
@@ -87,12 +116,14 @@ namespace DynamicScroll.Internal
                 }
             }
 
+            if (_isLocked)
+                return;
+
             if (GetLocalPosition(eventData, out Vector2 startPosition))
             {
+                ResetScrollingCache();
                 _startPosition = Helpers.GetVectorComponent(startPosition, _axis);
                 _isDragging = true;
-                _inertia = 0f;
-                _elasticity = 1f;
             }
         }
 

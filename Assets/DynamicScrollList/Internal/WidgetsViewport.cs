@@ -23,17 +23,27 @@ namespace DynamicScroll.Internal
             _alignment = alignment;
             _spacing = spacing;
             _axis = AxisMaskDesc.WidgetsAlignmentAxis[_alignment];
-
-            _edgesLastPositions = new Dictionary<WidgetsAlignment, float>
-            {
-                { _alignment, 0f },
-                { WidgetsAlignmentDesc.OppositeEdges[_alignment], _spacing * WidgetsAlignmentDesc.HeadInflationMasks[_alignment] },
-            };
+            _edgesLastPositions = new Dictionary<WidgetsAlignment, float>();
 
             SetPivotAndAnchors(_node);
+            Reset();
         }
 
-        public void Clear()
+        public void Reset()
+        {
+            _node.anchoredPosition = Vector2.zero;
+
+            _edgesLastPositions[_alignment] = 0f;
+            _edgesLastPositions[WidgetsAlignmentDesc.OppositeEdges[_alignment]] = _spacing * WidgetsAlignmentDesc.HeadInflationMasks[_alignment];
+
+            while (_widgets.Count > 0)
+            {
+                _itemWidgetsPool.ReturnWidget(_widgets[0]);
+                _widgets.RemoveAt(0);
+            }
+        }
+
+        public void Shutdown()
         {
             _itemWidgetsPool.Clear();
         }
@@ -118,6 +128,25 @@ namespace DynamicScroll.Internal
             float inflationMask = WidgetsAlignmentDesc.HeadInflationMasks[itemWidgetEdge];
             var res = (viewportEdgePosition - Helpers.GetVectorComponent(startPos, _axis)) * inflationMask;
             return res > 0f ? res * inflationMask / Helpers.GetVectorComponent(_node.lossyScale, _axis) : 0f;
+        }
+
+        public Rect GetWidgetWorldRectByRelativeIndex(int relativeIndex)
+        {
+            if (relativeIndex < 0 || relativeIndex >= _widgets.Count)
+                throw new Exception($"Invalid relative index {relativeIndex} {_widgets.Count}");
+
+            return Helpers.GetWorldRect(_widgets[relativeIndex].rectTransform);
+        }
+
+        public float GetLocalCoordinate(Vector2 worldCoordinates)
+        {
+            return Helpers.GetVectorComponent(worldCoordinates / _node.lossyScale, _axis);
+        }
+
+        public float GetInflationMask(ItemsEdge itemsEdge)
+        {
+            WidgetsAlignment alignment = GetItemWidgetEdge(itemsEdge);
+            return WidgetsAlignmentDesc.HeadInflationMasks[alignment];
         }
 
         bool IsEmpty()

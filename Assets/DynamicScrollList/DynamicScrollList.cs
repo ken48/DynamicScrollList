@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 
 namespace DynamicScroll
@@ -14,9 +15,9 @@ namespace DynamicScroll
     }
 
     // Todo: adding, deleting, changing of element on fly
-    // Todo: navigation to some data index
 
     [RequireComponent(typeof(Scroller))]
+    [RequireComponent(typeof(ScrollNavigation))]
     public class DynamicScrollList : MonoBehaviour
     {
         [SerializeField]
@@ -42,6 +43,7 @@ namespace DynamicScroll
         ItemsViewport _itemsViewport;
         WidgetsViewport _widgetsViewport;
         Scroller _scroller;
+        ScrollNavigation _scrollNavigation;
 
         void Reset()
         {
@@ -51,32 +53,70 @@ namespace DynamicScroll
             _elasticityCoef = 0.5f;
         }
 
-        public void Init(IItemsProvider itemsProvider, IWidgetsProvider widgetsProvider, int startItemIndex)
+        public void Init(IItemsProvider itemsProvider, IWidgetsProvider widgetsProvider)
         {
             _itemsProvider = itemsProvider;
-            _itemsViewport = new ItemsViewport(itemsProvider, startItemIndex);
+            _itemsViewport = new ItemsViewport(itemsProvider);
             _widgetsViewport = new WidgetsViewport(_contentNode, widgetsProvider, _alignment, _spacing);
 
             _scroller = GetComponent<Scroller>();
             _scroller.Init(_viewportNode, AxisMaskDesc.WidgetsAlignmentAxis[_alignment], _speedCoef, _inertiaCoef, _elasticityCoef);
-
             _scroller.onScroll += OnScroll;
 
-            // Initial refresh
-            RefreshViewport(ItemsEdge.Tail, true);
+            _scrollNavigation = GetComponent<ScrollNavigation>();
+            _scrollNavigation.Init(_itemsViewport, _widgetsViewport, InitialRefreshViewport);
+            _scrollNavigation.onScroll += OnScrollNavigation;
+            _scrollNavigation.onScrollStarted += OnScrollNavigationStarted;
+            _scrollNavigation.onScrollFinished += OnScrollNavigationFinished;
+
+            InitialRefreshViewport();
         }
 
         public void Shutdown()
         {
             _scroller.onScroll -= OnScroll;
-            _widgetsViewport.Clear();
+            _scrollNavigation.onScroll -= OnScrollNavigation;
+            _scrollNavigation.onScrollStarted -= OnScrollNavigationStarted;
+            _scrollNavigation.onScrollFinished -= OnScrollNavigationFinished;
+            _widgetsViewport.Shutdown();
+        }
+
+        public void CenterOnIndex(int index, bool immediate)
+        {
+            _scrollNavigation.CenterOnIndex(index, Helpers.GetWorldRect(_viewportNode), immediate);
+        }
+
+        void InitialRefreshViewport()
+        {
+            RefreshViewport(ItemsEdge.Tail, true);
+        }
+
+        void Scroll(float delta, bool adjustEdgeImmediate)
+        {
+            ItemsEdge? inflationEdge = _widgetsViewport.Move(delta);
+            if (inflationEdge.HasValue)
+                RefreshViewport(inflationEdge.Value, adjustEdgeImmediate);
         }
 
         void OnScroll(float delta)
         {
-            ItemsEdge? inflationEdge = _widgetsViewport.Move(delta);
-            if (inflationEdge.HasValue)
-                RefreshViewport(inflationEdge.Value, false);
+            Scroll(delta, false);
+        }
+
+        void OnScrollNavigation(float delta)
+        {
+            Scroll(delta, true);
+        }
+
+        void OnScrollNavigationStarted()
+        {
+            _scroller.StopScrolling();
+            _scroller.SetLocked(true);
+        }
+
+        void OnScrollNavigationFinished()
+        {
+            _scroller.SetLocked(false);
         }
 
         void RefreshViewport(ItemsEdge inflationEdge, bool adjustEdgeImmediate)
@@ -90,9 +130,7 @@ namespace DynamicScroll
         bool TryInflate(ItemsEdge edge, Rect viewportWorldRect)
         {
             if (!_widgetsViewport.NeedInflate(edge, viewportWorldRect) || !_itemsViewport.TryInflate(edge))
-            {
                 return false;
-            }
 
             int index = _itemsViewport.GetEdgeIndex(edge);
             _widgetsViewport.Inflate(edge, _itemsProvider.GetItemByIndex(index));
