@@ -130,17 +130,23 @@ namespace DynamicScroll.Internal
             return res > 0f ? res * inflationMask / Helpers.GetVectorComponent(_node.lossyScale, _axis) : 0f;
         }
 
-        public Vector2 GetWidgetWorldPositionByRelativeIndex(int relativeIndex)
+        public Rect GetWidgetWorldRectByRelativeIndex(int relativeIndex)
         {
             if (relativeIndex < 0 || relativeIndex >= _widgets.Count)
                 throw new Exception($"Invalid relative index {relativeIndex} {_widgets.Count}");
 
-            return Helpers.GetWorldRect(_widgets[relativeIndex].rectTransform).center;
+            return Helpers.GetWorldRect(_widgets[relativeIndex].rectTransform);
         }
 
         public float GetLocalCoordinate(Vector2 worldCoordinates)
         {
             return Helpers.GetVectorComponent(worldCoordinates / _node.lossyScale, _axis);
+        }
+
+        public float GetInflationMask(ItemsEdge itemsEdge)
+        {
+            WidgetsAlignment alignment = GetItemWidgetEdge(itemsEdge);
+            return WidgetsAlignmentDesc.HeadInflationMasks[alignment];
         }
 
         bool IsEmpty()

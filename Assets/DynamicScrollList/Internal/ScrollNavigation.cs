@@ -45,19 +45,22 @@ namespace DynamicScroll.Internal
             }
 
             int relativeIndex = _itemsViewport.GetItemRelativeIndex(index);
+            Rect widgetWorldRect = _widgetsViewport.GetWidgetWorldRectByRelativeIndex(relativeIndex);
+            Vector2 widgetWorldPosition = widgetWorldRect.center;
+            float shiftDelta = 0f;
             if (needShift)
             {
                 // Set position of needed index to appropriate viewport edge
                 int deltaHeadIndex = index - prevHeadIndex;
                 ItemsEdge itemsEdgeDirection = deltaHeadIndex < 0 ? ItemsEdge.Head : ItemsEdge.Tail;
-
-                // Todo: move relativeIndex widget outside the viewport
-                // ...
+                float sign = _widgetsViewport.GetInflationMask(itemsEdgeDirection);
+                Vector2 shiftWorldSize = (itemsEdgeDirection == ItemsEdge.Head ? widgetWorldRect : viewportWorldRect).size;
+                shiftDelta = _widgetsViewport.GetLocalCoordinate(shiftWorldSize) * sign;
+                OnScroll(shiftDelta);
             }
 
-            Vector2 widgetWorldPosition = _widgetsViewport.GetWidgetWorldPositionByRelativeIndex(relativeIndex);
             Vector2 viewportWorldCenter = viewportWorldRect.center;
-            float totalDelta = _widgetsViewport.GetLocalCoordinate(viewportWorldCenter - widgetWorldPosition);
+            float totalDelta = _widgetsViewport.GetLocalCoordinate(viewportWorldCenter - widgetWorldPosition) - shiftDelta;
             if (immediate)
             {
                 OnScroll(totalDelta);
