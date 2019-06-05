@@ -14,13 +14,15 @@ namespace DynamicScroll.Internal
 
         ItemsViewport _itemsViewport;
         WidgetsViewport _widgetsViewport;
+        Axis _axis;
         Action _refreshViewportFunc;
         Coroutine _centerOnIndexCo;
 
-        public void Init(ItemsViewport itemsViewport, WidgetsViewport widgetsViewport, Action refreshViewportFunc)
+        public void Init(ItemsViewport itemsViewport, WidgetsViewport widgetsViewport, Axis axis, Action refreshViewportFunc)
         {
             _itemsViewport = itemsViewport;
             _widgetsViewport = widgetsViewport;
+            _axis = axis;
             _refreshViewportFunc = refreshViewportFunc;
         }
 
@@ -46,21 +48,24 @@ namespace DynamicScroll.Internal
 
             int relativeIndex = _itemsViewport.GetItemRelativeIndex(index);
             Rect widgetWorldRect = _widgetsViewport.GetWidgetWorldRectByRelativeIndex(relativeIndex);
-            Vector2 widgetWorldPosition = widgetWorldRect.center;
+            int deltaHeadIndex = index - prevHeadIndex;
+            ItemsEdge itemsEdgeDirection = deltaHeadIndex < 0 ? ItemsEdge.Head : ItemsEdge.Tail;
+            float sign = _widgetsViewport.GetInflationSign(itemsEdgeDirection);
+
+            bool alignToEdge = Helpers.GetVectorComponent(widgetWorldRect.size, _axis) >
+                Helpers.GetVectorComponent(viewportWorldRect.size, _axis);
+            Vector2 viewportWorldPosition = GetRectPosition(viewportWorldRect, alignToEdge);
+            Vector2 widgetWorldPosition = GetRectPosition(widgetWorldRect, alignToEdge);
             float shiftDelta = 0f;
             if (needShift)
             {
                 // Set position of needed index to appropriate viewport edge
-                int deltaHeadIndex = index - prevHeadIndex;
-                ItemsEdge itemsEdgeDirection = deltaHeadIndex < 0 ? ItemsEdge.Head : ItemsEdge.Tail;
-                float sign = _widgetsViewport.GetInflationSign(itemsEdgeDirection);
                 Vector2 shiftWorldSize = (itemsEdgeDirection == ItemsEdge.Head ? widgetWorldRect : viewportWorldRect).size;
                 shiftDelta = _widgetsViewport.GetLocalCoordinate(shiftWorldSize) * sign;
                 OnScroll(shiftDelta);
             }
 
-            Vector2 viewportWorldCenter = viewportWorldRect.center;
-            float totalDelta = _widgetsViewport.GetLocalCoordinate(viewportWorldCenter - widgetWorldPosition) - shiftDelta;
+            float totalDelta = _widgetsViewport.GetLocalCoordinate(viewportWorldPosition - widgetWorldPosition) - shiftDelta;
             if (immediate)
             {
                 OnScroll(totalDelta);
@@ -70,6 +75,11 @@ namespace DynamicScroll.Internal
             {
                 _centerOnIndexCo = StartCoroutine(ScrollProcess(totalDelta));
             }
+        }
+
+        Vector2 GetRectPosition(Rect rect, bool alignedToEdge)
+        {
+            return alignedToEdge ? _widgetsViewport.GetRectEdge(rect) : rect.center;
         }
 
         IEnumerator ScrollProcess(float totalDelta)

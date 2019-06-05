@@ -58,9 +58,10 @@ public class Demo : MonoBehaviour
 static class Helpers
 {
     const string AllowedChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#@$^*()\n";
+    const int MaxBufferSize = 1024;
 
     static readonly System.Random _rnd = new System.Random();
-    static char[] _charBuffer = new char[256];
+    static char[] _charBuffer = new char[MaxBufferSize];
     static int _id = 0;
 
     static string RandomString(int minLength, int maxLength)
@@ -79,7 +80,7 @@ static class Helpers
     {
         return new T
         {
-            id = ++_id,
+            id = _id++,
             creation = DateTime.UtcNow,
         };
     }
@@ -88,7 +89,7 @@ static class Helpers
     {
         var result = CreateBaseItem<ChatItem1>();
         result.senderName = "Ann";
-        result.message = RandomString(32, 256);
+        result.message = RandomString(32, MaxBufferSize);
         return result;
     }
 

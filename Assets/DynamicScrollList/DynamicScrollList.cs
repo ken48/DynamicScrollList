@@ -56,13 +56,14 @@ namespace DynamicScroll
             _itemsProvider = itemsProvider;
             _itemsViewport = new ItemsViewport(itemsProvider);
             _widgetsViewport = new WidgetsViewport(_contentNode, widgetsProvider, _alignment, _spacing);
+            Axis axis = AxisMaskDesc.WidgetsAlignmentAxis[_alignment];
 
             _scroller = GetComponent<Scroller>();
-            _scroller.Init(_viewportNode, AxisMaskDesc.WidgetsAlignmentAxis[_alignment], _speedCoef, _inertiaCoef, _elasticityCoef);
+            _scroller.Init(_viewportNode, axis, _speedCoef, _inertiaCoef, _elasticityCoef);
             _scroller.onScroll += OnScroll;
 
             _scrollNavigation = GetComponent<ScrollNavigation>();
-            _scrollNavigation.Init(_itemsViewport, _widgetsViewport, InitialRefreshViewport);
+            _scrollNavigation.Init(_itemsViewport, _widgetsViewport, axis, InitialRefreshViewport);
             _scrollNavigation.onScroll += OnScrollNavigation;
             _scrollNavigation.onScrollStarted += OnScrollNavigationStarted;
             _scrollNavigation.onScrollFinished += OnScrollNavigationFinished;
