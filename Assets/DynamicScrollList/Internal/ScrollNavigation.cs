@@ -53,7 +53,7 @@ namespace DynamicScroll.Internal
                 // Set position of needed index to appropriate viewport edge
                 int deltaHeadIndex = index - prevHeadIndex;
                 ItemsEdge itemsEdgeDirection = deltaHeadIndex < 0 ? ItemsEdge.Head : ItemsEdge.Tail;
-                float sign = _widgetsViewport.GetInflationMask(itemsEdgeDirection);
+                float sign = _widgetsViewport.GetInflationSign(itemsEdgeDirection);
                 Vector2 shiftWorldSize = (itemsEdgeDirection == ItemsEdge.Head ? widgetWorldRect : viewportWorldRect).size;
                 shiftDelta = _widgetsViewport.GetLocalCoordinate(shiftWorldSize) * sign;
                 OnScroll(shiftDelta);
