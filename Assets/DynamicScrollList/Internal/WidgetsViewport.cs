@@ -149,9 +149,9 @@ namespace DynamicScroll.Internal
             return WidgetsAlignmentDesc.HeadInflationSigns[alignment];
         }
 
-        public Vector2 GetRectEdge(Rect rect)
+        public Vector2 GetRectEdge(Rect rect, WidgetsAlignment alignment)
         {
-            return WidgetsAlignmentDesc.RectPositions[_alignment](rect) * AxisMaskDesc.AxisMasks[_axis];
+            return WidgetsAlignmentDesc.RectPositions[alignment](rect) * AxisMaskDesc.AxisMasks[_axis];
         }
 
         bool IsEmpty()

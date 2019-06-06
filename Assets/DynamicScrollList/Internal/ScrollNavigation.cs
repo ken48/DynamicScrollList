@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace DynamicScroll.Internal
@@ -48,10 +49,6 @@ namespace DynamicScroll.Internal
 
             int relativeIndex = _itemsViewport.GetItemRelativeIndex(index);
             Rect widgetWorldRect = _widgetsViewport.GetWidgetWorldRectByRelativeIndex(relativeIndex);
-            int deltaHeadIndex = index - prevHeadIndex;
-            ItemsEdge itemsEdgeDirection = deltaHeadIndex < 0 ? ItemsEdge.Head : ItemsEdge.Tail;
-            float sign = _widgetsViewport.GetInflationSign(itemsEdgeDirection);
-
             bool alignToEdge = Helpers.GetVectorComponent(widgetWorldRect.size, _axis) >
                 Helpers.GetVectorComponent(viewportWorldRect.size, _axis);
             Vector2 viewportWorldPosition = GetRectPosition(viewportWorldRect, alignToEdge);
@@ -60,6 +57,9 @@ namespace DynamicScroll.Internal
             if (needShift)
             {
                 // Set position of needed index to appropriate viewport edge
+                int deltaHeadIndex = index - prevHeadIndex;
+                ItemsEdge itemsEdgeDirection = deltaHeadIndex < 0 ? ItemsEdge.Head : ItemsEdge.Tail;
+                float sign = _widgetsViewport.GetInflationSign(itemsEdgeDirection);
                 Vector2 shiftWorldSize = (itemsEdgeDirection == ItemsEdge.Head ? widgetWorldRect : viewportWorldRect).size;
                 shiftDelta = _widgetsViewport.GetLocalCoordinate(shiftWorldSize) * sign;
                 OnScroll(shiftDelta);
@@ -79,7 +79,7 @@ namespace DynamicScroll.Internal
 
         Vector2 GetRectPosition(Rect rect, bool alignedToEdge)
         {
-            return alignedToEdge ? _widgetsViewport.GetRectEdge(rect) : rect.center;
+            return alignedToEdge ? _widgetsViewport.GetRectEdge(rect, AlignmentDesc.AxisAlignment[_axis]) : rect.center;
         }
 
         IEnumerator ScrollProcess(float totalDelta)
@@ -118,5 +118,14 @@ namespace DynamicScroll.Internal
         {
             return t * (2f - t);
         }
+    }
+
+    static class AlignmentDesc
+    {
+        public static readonly Dictionary<Axis, WidgetsAlignment> AxisAlignment = new Dictionary<Axis, WidgetsAlignment>
+        {
+            { Axis.X, WidgetsAlignment.Left },
+            { Axis.Y, WidgetsAlignment.Top },
+        };
     }
 }
